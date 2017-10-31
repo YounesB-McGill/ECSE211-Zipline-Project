@@ -38,7 +38,14 @@ public class Test{
     /**
      * Test the Odometer class 
      * This test does not depend on Navigation
+     * @return 
      */
+    
+    public void testing(){
+    	testOdometer();
+    }
+    
+    
     private static void testOdometer() {
         // Wait for button press
         int button = 0;
@@ -62,64 +69,55 @@ public class Test{
                                        *TILE/( // rotations needed to travel the length of one TILE  
                                               2*Math.PI*WHEEL_RADIUS))); // = TILE/Wheel circumference 
             
-            leftMotor.setSpeed(FWD_SPEED); // Can't use Navigation helper methods here
-            rightMotor.setSpeed(FWD_SPEED);
+            setFwdSpeed(); // Can't use Navigation helper methods here
             leftMotor.rotate(degrees, true);
             leftMotor.rotate(degrees, false);
             
-            // Turn right by 90�
+            // Turn right by 90锟�
             degrees = (int) ((TRACK * 90) / (2 * WHEEL_RADIUS)); // Code from Lab 3, mathematically simplified
-            leftMotor.setSpeed(ROTATE_SPEED);
-            rightMotor.setSpeed(ROTATE_SPEED);
+            setRotSpeed(); 
             leftMotor.rotate(degrees, true);
             rightMotor.rotate(-degrees, false); // Note the minus sign!
         }
         
         // Go forward for 2 tiles
         int degrees = (int) (2*(360*TILE/(2*Math.PI*WHEEL_RADIUS)));
-        leftMotor.setSpeed(FWD_SPEED); 
-        rightMotor.setSpeed(FWD_SPEED);
+        setFwdSpeed(); 
         leftMotor.rotate(degrees, true);
         leftMotor.rotate(degrees, false);
         
-        // Turn right by 153.435�
+        // Turn right by 153.435锟�
         degrees = (int) ((TRACK * 153.435) / (2 * WHEEL_RADIUS));
-        leftMotor.setSpeed(ROTATE_SPEED);
-        rightMotor.setSpeed(ROTATE_SPEED);
+        setRotSpeed(); 
         leftMotor.rotate(degrees, true);
         rightMotor.rotate(-degrees, false);
         
         // Go forward for 2.236 tile
         degrees = (int) (2.236*(360*TILE/(2*Math.PI*WHEEL_RADIUS)));
-        leftMotor.setSpeed(FWD_SPEED);
-        rightMotor.setSpeed(FWD_SPEED);
+        setFwdSpeed(); 
         leftMotor.rotate(degrees, true);
         leftMotor.rotate(degrees, false);
         
-        // Turn left by 108.435�
+        // Turn left by 108.435锟�
         degrees = (int) ((TRACK * 108.435) / (2 * WHEEL_RADIUS));
-        leftMotor.setSpeed(ROTATE_SPEED);
-        rightMotor.setSpeed(ROTATE_SPEED);
+        setRotSpeed(); 
         leftMotor.rotate(-degrees, true); // Minus here since we're turning left
         rightMotor.rotate(degrees, false);
         
         // Go forward for 1.414 tiles
         degrees = (int) (1.414*(360*TILE/(2*Math.PI*WHEEL_RADIUS)));
-        leftMotor.setSpeed(FWD_SPEED);
-        rightMotor.setSpeed(FWD_SPEED);
+        setFwdSpeed(); 
         leftMotor.rotate(degrees, true);
         leftMotor.rotate(degrees, false);
         
-        // Turn left by 45�
+        // Turn left by 45锟�
         degrees = (int) ((TRACK * 45) / (2 * WHEEL_RADIUS));
-        leftMotor.setSpeed(ROTATE_SPEED);
-        rightMotor.setSpeed(ROTATE_SPEED);
+        setRotSpeed(); 
         leftMotor.rotate(-degrees, true); // Minus here since we're turning left
         rightMotor.rotate(degrees, false);
         
         // Stop
-        leftMotor.stop();
-        rightMotor.stop();
+        stop();
 
     }
     
@@ -127,10 +125,54 @@ public class Test{
      * Test the Navigation class 
      */
     private static void testNavigation() {
+    	// Wait for button press
+        int button = 0;
+        System.out.println("Press a button \n"
+                         + "to start the \n"
+                         + "navigation test");
+        while (button == 0)
+            button = Button.waitForAnyPress();
         
-    }
+        // Clear display
+        textLCD.clear();
+        
+        // Start odometer and display
+        odometer.start();
+        odometryDisplay.start();
+        
+        int[][] destination = new int[][]{
+			 {0,2},
+			 {2,2},
+			 {2,0},
+			 {0,0},
+			 {0,2},
+			 {1,0},
+			 {2,1},
+	  };		
+        
+        //travel in a square
+	   for (int i = 0; i < 7; i++){
+		  double x = destination[i][0];
+		  double y = destination[i][1];
+		  navigation.travelTo(x,y);
+		  
+		  //stop motors
+		  stop();	  
+		  //wait 1 second
+		 waitAWhile(1);
+	    }        
+        stop();
+           
+           
+        }
+        
+      
+        
+
     
-    /**
+    
+
+	/**
      * Test the UltrasonicLocalization class 
      * Includes test for usData filtering
      */
@@ -187,6 +229,31 @@ public class Test{
      */
     private static void integrationTest() {
         
+    }
+    
+    
+    private static void waitAWhile(int i) {
+		// TODO Auto-generated method stub
+    	 try {
+			  Thread.sleep(i*1000);
+		  } 
+		  catch (InterruptedException e) {
+		  }
+		
+	}
+    private static void setFwdSpeed(){
+    leftMotor.setSpeed(FWD_SPEED); 
+    rightMotor.setSpeed(FWD_SPEED);
+    }
+    
+    private static void setRotSpeed(){
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+    }
+    
+    private static void stop(){
+    leftMotor.stop();
+    rightMotor.stop();
     }
     
 }

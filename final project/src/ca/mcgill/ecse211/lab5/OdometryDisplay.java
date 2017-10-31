@@ -16,18 +16,26 @@ public class OdometryDisplay extends Thread {
   private Odometer odometer;
   private TextLCD t;
 
-  // constructor
+  /**
+   * constructor
+   * @param odometer
+   * @param t
+   */
   public OdometryDisplay(Odometer odometer, TextLCD t) {
     this.odometer = odometer;
     this.t = t;
   }
 
-  /* Method required to run the thread */
+  /**
+   *  run the thread
+   */
   public void run() {
     long displayStart, displayEnd;
     double[] position = new double[3];
 
-    // clear the display once
+    /**
+     * clear the display before starting
+     */
     t.clear();
 
     while (true) {
@@ -59,7 +67,15 @@ public class OdometryDisplay extends Thread {
       }
     }
   }
-
+  
+  
+  /**
+   * trasfer double valur to string 
+   * if we directly print double value, the output would become something else
+   * @param x
+   * @param places
+   * @return
+   */
   private static String formattedDoubleToString(double x, int places) {
     String result = "";
     String stack = "";

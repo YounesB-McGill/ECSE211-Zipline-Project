@@ -20,6 +20,9 @@ import lejos.robotics.SampleProvider;
 */
 public class Main {
 
+	/**
+	 * initialize all the constants in the lab
+	 */
     public static final double WHEEL_RADIUS = 2.13;
     public static final double TRACK = 14.80; // wait to decide
     public static final int TRAVERSE_SPEED = 100;
@@ -27,7 +30,9 @@ public class Main {
     public static final int FWD_SPEED=250;
     public static final int ROTATE_SPEED=200;
     
-
+    /**
+     * initialze motors
+     */
     public static final EV3LargeRegulatedMotor leftMotor = 
     		new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
     public static final EV3LargeRegulatedMotor rightMotor = 
@@ -35,14 +40,25 @@ public class Main {
     public static final EV3LargeRegulatedMotor traverseMotor = 
     		new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
     
+    /**
+     * initialize sensors
+     */
     public static final Port usPort = LocalEV3.get().getPort("S1");
     public static final Port sensorPort = LocalEV3.get().getPort("S4");
+    
+    /**
+     * declare class objects that might be used 
+     */
     public static Odometer odometer;
     public static TextLCD textLCD;
     public static EV3UltrasonicSensor usSensor;
     public static EV3ColorSensor cSensor;
     public static Navigation navigation;
     public static OdometryDisplay odometryDisplay ;
+    
+    /**
+     * declare variables that might be used
+     */
     private static int buttonChoice;
     static int x = 0;
     static int y = 0;
@@ -50,28 +66,53 @@ public class Main {
     static int xc = 0; 
     static int yc = 0;
     
+    /**
+     * start main method of the project
+     * @param args
+     */
     public static void main(String[] args) {
 
+    	/**
+    	 * initialize odometer and screen display
+    	 */
         textLCD = LocalEV3.get().getTextLCD();
         odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
         OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, textLCD);
-
+        
+        /**
+         * initialize ultrasonic sensor and the object for reading ultrasonic sensor data
+         */
         SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
         SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from this instance
         float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are returned
         UltrasonicPoller usPoller = null;
         
+        /**
+         * initialize color sensor
+         */
         EV3ColorSensor cSensor = new EV3ColorSensor(sensorPort);
         
+        /**
+         * ask for user to input values if necessary
+         */       
         //do display
-        settingDisplay();
+        //settingDisplay();
         
         
-        //start running robot
+        /**
+         * start running robot
+         */
+        buttonChoice = Button.waitForAnyPress();
         if (buttonChoice == Button.ID_ENTER) {
+        	        	
+        	//start test
+        	Test test=new Test();
+        	test.testing();
+        	
+        	
             // TODO Make robot localize according to Lab 4
         
-            odometer.start(); // thread 1
+          /*  odometer.start(); // thread 1
             odometryDisplay.start(); // thread 2
 
            UltrasonicLocalizer ultrasonicLocalizer = new UltrasonicLocalizer(odometer, leftMotor, rightMotor,
@@ -117,7 +158,7 @@ public class Main {
            TraverseZipLine traverse = new TraverseZipLine(odometer, leftMotor, rightMotor, traverseMotor,
                  navigation,xc,yc);
             traverse.run();
-            
+          */  
             
 
         }
@@ -128,7 +169,10 @@ public class Main {
     }
 
     
-    
+    /**
+     * display content on the screen to remind user what to input
+     * change the value of variables according to user input
+     */
     private static void settingDisplay() {
     	 // choose x,y
         do {
@@ -206,6 +250,11 @@ public class Main {
         } while (buttonChoice != Button.ID_ENTER);
 		
 	}
+    
+    /**
+     * let a thread begin after current thread dies
+     * @param thread
+     */
 
 	public static void dispose(Thread thread) {
         try {
