@@ -23,8 +23,8 @@ public class Main {
 	/**
 	 * initialize all the constants in the lab
 	 */
-    public static final double WHEEL_RADIUS = 2.13;
-    public static final double TRACK = 14.80; // wait to decide
+    public static final double WHEEL_RADIUS = 2.10;
+    public static final double TRACK = 14.1; // wait to decide
     public static final int TRAVERSE_SPEED = 100;
     public static final double TILE = 30.48;	
     public static final int FWD_SPEED=250;
@@ -77,7 +77,7 @@ public class Main {
     	 */
         textLCD = LocalEV3.get().getTextLCD();
         odometer = new Odometer(leftMotor, rightMotor, WHEEL_RADIUS, TRACK);
-        OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, textLCD);
+        odometryDisplay = new OdometryDisplay(odometer, textLCD);
         
         /**
          * initialize ultrasonic sensor and the object for reading ultrasonic sensor data
@@ -104,9 +104,11 @@ public class Main {
          */
         buttonChoice = Button.waitForAnyPress();
         if (buttonChoice == Button.ID_ENTER) {
-        	        	
+        	navigation = 
+					new Navigation(odometer, leftMotor, rightMotor, WHEEL_RADIUS, TRACK, x, y);   	
         	//start test
         	Test test=new Test();
+        	
         	test.testing();
         	
         	

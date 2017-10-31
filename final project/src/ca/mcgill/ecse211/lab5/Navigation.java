@@ -36,8 +36,8 @@ public class Navigation extends Thread implements UltrasonicController {
 	private int desy;
 
 	// static values
-	private static final int FORWARD_SPEED = 150;
-	private static final int ROTATE_SPEED = 60;
+	private static final int FORWARD_SPEED = 300;
+	private static final int ROTATE_SPEED = 200;
 	private static final double TILE = 30.48;
 
 	// constructor
