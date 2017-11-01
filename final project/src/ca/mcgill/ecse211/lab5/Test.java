@@ -59,8 +59,64 @@ public class Test {
 
 		// Clear display
 		textLCD.clear();
+		for(int i = 0; i < 4; i++) {
+            // Go forward for 2 tiles
+           /* int degrees = (int) (2 // Number of tiles
+                                  *(360 // degrees/rotation
+                                       *TILE/( // rotations needed to travel the length of one TILE  
+                                              2*Math.PI*WHEEL_RADIUS))); // = TILE/Wheel circumference */
+            int distance = (int) ((180.0 * 2*TILE) / (Math.PI * WHEEL_RADIUS));
+            // Can't use Navigation helper methods here
+            setFwdSpeed(); 
+            leftMotor.rotate(distance, true);
+            leftMotor.rotate(distance, false);
+            
+            // Turn right by 90锟�
+           
+            distance = (int) ((180.0 * Math.PI * TRACK * 90 / 360.0) / (Math.PI * WHEEL_RADIUS));
+            // Code from Lab 3
+            setRotSpeed(); 
+            leftMotor.rotate(distance, true);
+            rightMotor.rotate(-distance, false); // Note the minus sign!
+        }
+        
+        // Go forward for 2 tiles
+		int distance = (int) ((180.0 * 2*TILE) / (Math.PI * WHEEL_RADIUS));
+        setFwdSpeed(); 
+        leftMotor.rotate(distance, true);
+        leftMotor.rotate(distance, false);
+        
+        // Turn right by 153.435锟�
+        distance = (int) ((180.0 * Math.PI * TRACK * 153.435 / 360.0) / (Math.PI * WHEEL_RADIUS));
+        setRotSpeed(); 
+        leftMotor.rotate(distance, true);
+        rightMotor.rotate(-distance, false);
+        
+        // Go forward for 2.236 tile
+        distance = (int) ((180.0 * 2.236*TILE) / (Math.PI * WHEEL_RADIUS));
+        setFwdSpeed(); 
+        leftMotor.rotate(distance, true);
+        leftMotor.rotate(distance, false);
+        
+        // Turn left by 108.435锟�
+        distance = (int) ((180.0 * Math.PI * TRACK * 108.435 / 360.0) / (Math.PI * WHEEL_RADIUS));
+        setRotSpeed(); 
+        leftMotor.rotate(-distance, true); // Minus here since we're turning left
+        rightMotor.rotate(distance, false);
+        
+        // Go forward for 1.414 tiles
+        distance = (int) ((180.0 * 1.414*TILE) / (Math.PI * WHEEL_RADIUS));
+        setFwdSpeed(); 
+        leftMotor.rotate(distance, true);
+        leftMotor.rotate(distance, false);
+        
+        // Turn left by 45锟�
+        distance = (int) ((180.0 * Math.PI * TRACK * 45 / 360.0) / (Math.PI * WHEEL_RADIUS));
+        setRotSpeed(); 
+        leftMotor.rotate(-distance, true); // Minus here since we're turning left
+        rightMotor.rotate(distance, false);
 
-		// Start odometer and display
+     /*		// Start odometer and display
 		odometer.start();
 		odometryDisplay.start();
 
@@ -89,7 +145,7 @@ public class Test {
 		
 		// Turn left by 45
 		counterclockwise(45);
-		
+		*/
 		// Stop
 		stop();
 
