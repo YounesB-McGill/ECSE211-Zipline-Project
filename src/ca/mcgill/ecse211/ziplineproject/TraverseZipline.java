@@ -3,8 +3,8 @@ package ca.mcgill.ecse211.ziplineproject;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
- * This class contains the zipline traversal and dismount logic
- * @author Lenovo
+ * This class contains the zipline traversal and dismount logic.
+ * @author Younes Boubekeur
  *
  */
 public class TraverseZipline extends Thread{

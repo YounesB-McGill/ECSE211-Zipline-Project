@@ -9,7 +9,7 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.SampleProvider;
 
 /**
- * This class contains the ultrasonic localization logic
+ * This class contains the ultrasonic localization logic.
  * 
  * @author Paarth Kalia
  *
@@ -232,6 +232,10 @@ public class UltrasonicLocalizer {
         }
     }
     
+    /**
+     * 
+     * @return Distance from the US sensor in cm
+     */
     private static int getData(){
         int dist;
         try { Thread.sleep(50); } catch (InterruptedException e) {}

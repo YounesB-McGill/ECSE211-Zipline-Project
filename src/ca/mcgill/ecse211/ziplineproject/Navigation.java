@@ -23,21 +23,22 @@ import lejos.hardware.sensor.EV3ColorSensor;
 public class Navigation {
     
     //initializing variables
-    public static final double WHEEL_RADIUS = Main.WHEEL_RADIUS;
-    public static final double TRACK = Main.TRACK;
-    public static final double TILE = Main.TILE;
+    /**The radius of the robot's wheel*/public static final double WHEEL_RADIUS = Main.WHEEL_RADIUS;
+    /**The width of the robot */public static final double TRACK = Main.TRACK;
+    /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = Main.TILE;
     
-    private static final int FORWARD_SPEED = Main.FWD_SPEED;
-    public static final int ROTATE_SPEED = Main.ROTATE_SPEED;
+    /**The speed at which the robot travels forward*/private static final int FORWARD_SPEED = Main.FWD_SPEED;
+    /**The speed at which the robot rotates*/public static final int ROTATE_SPEED = Main.ROTATE_SPEED;
     
     
-    public static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
-    public static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
+    /**The EV3 left motor*/public static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
+    /**The EV3 right motor*/public static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
     //public static UltrasonicPoller usPoller;
     
+    /**Initialization of the odometer which calculates the position and orientation of the robot*/
     public static Odometer odometer = Main.odometer;
     
-    public Object lock;
+    /**Used to synchronize access to a resource across multiple threads*/public Object lock;
 
     
     // Points array of all possible trajectories
@@ -57,11 +58,13 @@ public class Navigation {
     public boolean isTurning = false;
     public boolean isTraveling = false;
     public boolean inDanger = false;
+    /** Track whether the robot has arrived to a destination*/public boolean reachedDestination = false;
     
-    private static long SLEEPINT = 1500;
+    private static long SLEEPINT = 150;
     
     public Navigation(){
         lock = new Object();
+        //leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
     }
     
     public void run(){
@@ -77,11 +80,62 @@ public class Navigation {
 
     /**
      * Travel to specified point
-     * @param {double} x - X coordinate based on gridlines
-     * @param {double} y - Y coordinate based on gridlines
+     * @param x <i>x</i> coordinate based on gridlines
+     * @param y <i>y</i> coordinate based on gridlines
      */
      public void travelTo(double x, double y) {
+         
+         /*travelTo(0.1*x, 0.1*y, (int) (0.2*FORWARD_SPEED));
+         travelTo(0.2*x, 0.2*y, (int) (0.5*FORWARD_SPEED));
+         travelTo(0.5*x, 0.5*y, FORWARD_SPEED);
+         travelTo(0.8*x, 0.8*y, (int) (0.5*FORWARD_SPEED));
+         travelTo(x, y, (int) (0.2*FORWARD_SPEED));*/
+         
+         travelTo(x, y, (int) (FORWARD_SPEED));
+         
+         // Stop motors when we reach destination
+         //leftMotor.startSynchronization();
+         leftMotor.stop(true);
+         rightMotor.stop(true);
+         //leftMotor.endSynchronization();
+         
+     }
+     
+     public void travelTo(double x, double y, int speed) {
+         isTraveling = true;
+         // Convert to cm
          x = x * TILE;
+         y = y * TILE;
+         
+         // getting the current position of robot
+         double currX = odometer.getX();
+         double currY = odometer.getY();
+         
+         double deltaX = x - currX;
+         double deltaY = y - currY;
+         
+         // getting the theta of the destination, converting to degrees
+         double destTheta = Math.atan2(deltaX, deltaY) * 180 / Math.PI;
+         
+         // getting distance needed to travel
+         double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+         
+         // turn to destination theta
+         setSpeed(0);
+         turnTo(destTheta);
+         
+         try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
+         
+         // travel to destination
+         setSpeed(0);
+         setSpeed(speed);
+         forward(distance);
+         
+         
+         isTraveling = false;
+         
+         // Chaoyi's old logic
+         /*x = x * TILE;
          y = y * TILE;
          getPosition(odometer);
          // calculate the angle we need to turn to
@@ -92,8 +146,8 @@ public class Navigation {
          // turn to the proper angle
          turnTo(theta1);
          // drive forward
-         leftMotor.setSpeed(FORWARD_SPEED);
-         rightMotor.setSpeed(FORWARD_SPEED);
+         leftMotor.setSpeed(speed);
+         rightMotor.setSpeed(speed);
          forward();
          // keep calling turnTo and checking the distance
          while (true) {
@@ -101,14 +155,11 @@ public class Navigation {
              // if we've reached our destination, break the loop
              if (Math.abs(y - nowY) < 0.8 && Math.abs(x - nowX) < 0.8)
                  break;
-         }
-
-         leftMotor.stop(true);
-         rightMotor.stop(true);
-
-     }
+         }*/
+         
+    } // end travelTo()
     
-    public void moveTo(double x, double y) {
+    /*public void moveTo(double x, double y) {
         isTraveling = true;
         x = x * TILE;
         y = y * TILE;
@@ -119,9 +170,10 @@ public class Navigation {
             // getting the theta of the destination, converting to degrees
             double destTheta = Math.atan2((x - currX), (y - currY)) * 180 / Math.PI;
             // getting distance needed to travel
-            double distance = Math.sqrt((x - currX) * (x - currX) + (y - currY) * (y - currY));
             double deltaX = (x - currX);
             double deltaY = (y - currY);
+            double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+            
             // Rotate to point towards destination theta
             turnTo(destTheta);
             
@@ -156,16 +208,85 @@ public class Navigation {
 
             isTraveling = false;
         }
-    }
+    }*/
 
+    
+    /* (Template for a JavaDoc w picture)
+     * Turn to specified angle
+     * 
+     * <pre><img src="{@docRoot}/doc-files/surface-subway.png" /></pre>
+     * 
+     * @param theta Theta in degrees
+     * 
+     */
 
     /**
     * Turn to specified angle
-    * @param {double} theta - Theta in degrees
+    * 
+    * @param theta Theta in degrees
+    * 
     */
     public void turnTo(double theta) {
-
         isTurning = true;
+        double currTheta = odometer.getThetaInDegrees();
+        
+        // Convert both thetas to [-180,180) scale
+        theta = convertAngleTo180Scale(theta);
+        currTheta = convertAngleTo180Scale(currTheta);
+        
+        double otherSide = currTheta-180;
+        otherSide = convertAngleTo180Scale(otherSide);
+        
+        setSpeed(0);
+        setSpeed(ROTATE_SPEED);
+        
+        double deltaTheta;
+        if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
+            // No discontinuity in either 180° or 360° scale
+            deltaTheta = Math.abs(theta - currTheta);
+            if(currTheta>theta) {
+                // Turn left by deltaTheta
+                turnLeftBy(deltaTheta);
+            } else {
+                // Turn right by deltaTheta
+                turnRightBy(deltaTheta);
+            }
+        } else {
+            /* Handle discontinuity by comparing the angle difference in both scales, [-180,180) and [0,360),
+             * and select the scale that has the lesser angle difference to turn to the minimal angle */
+            double theta360=theta, currTheta360=currTheta;
+            if(theta<0) theta360 += 360; 
+            if(currTheta<0) currTheta360 += 360;
+            
+            double deltaTheta180 = Math.abs(theta-currTheta);
+            double deltaTheta360 = Math.abs(theta360-currTheta360);
+            if(deltaTheta180 <= deltaTheta360) {
+                // Use 180° scale
+                if(currTheta>theta) {
+                    // Turn left by deltaTheta in the 180° scale
+                    turnLeftBy(deltaTheta180);
+                } else {
+                    // Turn right by deltaTheta in the 180° scale
+                    turnRightBy(deltaTheta180);
+                }
+            } else {
+                // Use 360° scale
+                if(currTheta360>theta360) {
+                    // Turn left by deltaTheta in the 360° scale
+                    turnLeftBy(deltaTheta360);
+                } else {
+                    // Turn right by deltaTheta in the 360° scale
+                    turnRightBy(deltaTheta360);
+                }
+            }
+        }
+        
+        setSpeed(0);
+
+        isTurning = false;
+        
+        // Chaoyi's old logic
+        /*isTurning = true;
         // convert to polar coordinate
         nowTheta = (360.0 - nowTheta) + 90.0;
         if (nowTheta > 360.0)
@@ -183,7 +304,7 @@ public class Navigation {
         rightMotor.setSpeed(ROTATE_SPEED);
         leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, turningTheta), true);
         rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, turningTheta), false);
-        isTurning = false;
+        isTurning = false;*/
     }
 
     /**
@@ -193,20 +314,42 @@ public class Navigation {
         return isTurning || isTraveling;
     }
 
-    public static void turn(double diff){
-        leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, diff), true);
-        rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, diff), false);
+    /**
+     * Turn right by the number of degrees specified. This method is mutually recursive with 
+     * <b><code>turnLeftBy()</code></b> to guard against turning with a maximal angle.
+     * @param angle
+     */
+    public static void turnRightBy(double angle){
+        angle = convertAngleTo180Scale(angle);
+        if(angle < 0) {
+            turnLeftBy(-angle);
+        } else {
+            // Input is correct, so turn right
+            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+        }
     }
 
-    public static void turnLeft(double diff){
-        leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, diff), true);
-        rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, diff), false);
+    /**
+     * Turn left by the number of degrees specified. This method is mutually recursive with 
+     * <b><code>turnRightBy()</code></b> to guard against turning with a maximal angle.
+     * @param angle
+     */
+    public static void turnLeftBy(double angle){
+        angle = convertAngleTo180Scale(angle);
+        if(angle < 0) {
+            turnRightBy(-angle);
+        } else {
+            // Input is correct, so turn left
+            leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+        }
     }
 
     /**
     * Convert to wheel rotations based on the wheel radius and travel distance
-    * @param {double} radius - Wheel radius of the regular EV3 wheels
-    * @param {double} distance - Desired distance to travel
+    * @param radius Wheel radius of the regular EV3 wheels
+    * @param distance Desired distance to travel
     * @returns Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertDistance(double radius, double distance) {
@@ -215,9 +358,9 @@ public class Navigation {
     
     /**
     * Calls convertDistance to get wheel rotations based on the wheel radius, width, and angle
-    * @param {double} radius - Wheel radius of the regular EV3 wheels
-    * @param {double} width - Width of the robot (TRACK)
-    * @param {double} angle - Angle that defines the distance
+    * @param radius Wheel radius of the regular EV3 wheels
+    * @param width Width of the robot (TRACK)
+    * @param angle Angle that defines the distance
     * @returns Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertAngle(double radius, double width, double angle) {
@@ -226,7 +369,7 @@ public class Navigation {
 
     /**
      * Set the speed for the left motor.
-     * @param {float} speed - The speed of the motor in degrees per second
+     * @param speed The speed of the motor in degrees per second
      */
     public static void setLeftSpeed(float speed) {
         leftMotor.setSpeed(speed);
@@ -234,7 +377,7 @@ public class Navigation {
 
     /**
      * Set the speed for the right motor.
-     * @param {float} speed - The speed of the motor in degrees per second
+     * @param speed The speed of the motor in degrees per second
      */
     public static void setRightSpeed(float speed) {
         rightMotor.setSpeed(speed);
@@ -242,11 +385,36 @@ public class Navigation {
     
     /**
      * Set the speed for both the left and right motors.
-     * @param {float} speed - The speed of the motor in degrees per second
+     * @param speed The speed of the motor in degrees per second
      */
     public static void setSpeed(float speed) {
         setLeftSpeed(speed);
         setRightSpeed(speed);
+    }
+    
+    /**
+     * Set the acceleration for the left motor.
+     * @param acceleration The acceleration of the motor in degrees per second 
+     */
+    public static void setLeftAcceleration(int acceleration) {
+        leftMotor.setAcceleration(acceleration);
+    }
+
+    /**
+     * Set the acceleration for the right motor.
+     * @param acceleration The acceleration of the motor in degrees per second
+     */
+    public static void setRightAcceleration(int acceleration) {
+        rightMotor.setAcceleration(acceleration);
+    }
+    
+    /**
+     * Set the acceleration for both the left and right motors.
+     * @param acceleration The acceleration of the motor in degrees per second
+     */
+    public static void setAcceleration(int acceleration) {
+        setLeftAcceleration(acceleration);
+        setRightAcceleration(acceleration);
     }
     
     /**
@@ -295,7 +463,7 @@ public class Navigation {
     
     /**
      * Go forward for a specified distance
-     * @param {double} distance - Desired distance in cm.
+     * @param distance Desired distance in cm.
      */
     public static void forward(double distance){
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
@@ -358,6 +526,22 @@ public class Navigation {
     public double transferAngle(double angle) {
         // convert to polar coordinate
         angle = (360.0 - angle) + 90.0;
+        return angle;
+    }
+    
+    /**
+     * Takes an angle in degrees
+     * @return The converted angle in the scale [-180,180).
+     */
+    public static double convertAngleTo180Scale(double angle) {
+        // Wraparound 360°
+        angle %= 360;
+        if(angle>=180) {
+            angle -= 360;
+        }
+        if(angle<-180) {
+            angle +=360;
+        }
         return angle;
     }
     

@@ -32,8 +32,11 @@ import lejos.robotics.SampleProvider;
  * search zone and captures it by beeping three times. The robot returns to its own start corner using the other method 
  * of travel.
  * </p>
- * <p>This entire exercise must be done in no more than 5 minutes.
+ * <p>This entire exercise must be done in no more than 5 minutes. This is an image of the competition supplied by
+ * the client:
  * </p>
+ * 
+ * <pre><img src="{@docRoot}/doc-files/competition.png" /></pre>
  * 
  * @author Younes Boubekeur 
  */
@@ -41,7 +44,7 @@ public class Main {
 
     /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.13;
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
-    public static final double TRACK = 15.2; // was 14.80, then 15.0. 15.0 was better
+    public static final double TRACK = 14.68; // was 14.80, then 15.0, then 15.2. 15.0 was better
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 200;
@@ -106,7 +109,17 @@ public class Main {
     /**Navigation object used to navigate across the game environment*/
     public static Navigation navigation = new Navigation();
     
+    /**
+     * The possible team colors of the robot, either Red or Green.
+     */
     public static enum TeamColor { RED, GREEN };
+    
+    /**
+     * The current team color of the robot, based on the information sent by the Wi-Fi server
+     */
+    public static TeamColor teamColor;
+    
+    /*************************************************************************************************/
     
     /**
      * Main entry point for the game logic
@@ -114,18 +127,41 @@ public class Main {
      */
     @SuppressWarnings("static-access")
     public static void main(String[] args) {
-        Sound.beep();
+        //Sound.beep();
+        Sound.beepSequenceUp();
+        setTeamColor();
         //startCorner = Display.getStartCornerUI();
         
-        Test.testOdometer();
+        //Test.testOdometer();
+        TestNavigation.testNavigation();
+        Test.testLightLocalizer();
 
+        
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ;
         System.exit(0);
+    } // end main method
+    
+    /**
+     * @return The current team color of the robot
+     */
+    public static TeamColor getTeamColor() {
+        // TODO After Beta demo, add team color logic here
+        return TeamColor.GREEN;
     }
+    
+    /**
+     * Sets the team color of the robot based on the information obtained from Wi-Fi
+     */
+    public static void setTeamColor(/* TODO Add Wi-Fi parameters here*/) {
+        // TODO After Beta demo, add team color logic here
+        teamColor = TeamColor.GREEN;
+    }
+    
+    /*************************************************************************************************/
 
     // Moved to Display class
-    public static void setStartCorner() {
+    /*public static void setStartCorner() {
         do {
             // clear the display
             textLCD.clear();
@@ -145,10 +181,10 @@ public class Main {
                 startCorner--;
             }
         } while (buttonChoice != Button.ID_ENTER);
-    }
+    }*/
 
     // Moved to Display class
-    private static void setXY() {
+    /*private static void setXY() {
         int buttonChoice;
         do {
             // clear the display
@@ -165,10 +201,10 @@ public class Main {
                 y0--;
             }
         } while (buttonChoice != Button.ID_ENTER);
-    }
+    }*/
     
     // Moved to Display class
-    private static void drawSetXYUI() {
+    /*private static void drawSetXYUI() {
         textLCD.clear();
         textLCD.drawString("   Choose x,y   ", 0, 0);
         textLCD.drawString("   coordinate:  ", 0, 1);
@@ -177,10 +213,10 @@ public class Main {
         textLCD.drawString("up/down for y   ", 0, 4);
         textLCD.drawString("press center    ", 0, 5);
         textLCD.drawString("button to confirm", 0, 6);
-    }
+    }*/
 
     // These methods are for internal testing and are therefore excluded from the API
-    public static void dispose(Thread thread) {
+    /*public static void dispose(Thread thread) {
         try {
             thread.join(); // wait till thread dies
         } catch (InterruptedException e) {}
@@ -202,7 +238,8 @@ public class Main {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
+    }*/
     
     
-}
+} // end Main class
+

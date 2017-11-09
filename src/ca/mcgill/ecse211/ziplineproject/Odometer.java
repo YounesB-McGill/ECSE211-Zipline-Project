@@ -32,7 +32,7 @@ public class Odometer implements Runnable {
     private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
     private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
 
-    private static final long ODOMETER_PERIOD = 35; //  odometer update period, in ms 
+    /**odometer update period, in ms */private static final long ODOMETER_PERIOD = 35; 
     private static double WHEEL_RADIUS = Main.WHEEL_RADIUS;
     private static final double THETA_OFFSET = 362d/365; // reduce error in theta. d is for double
     private static final double TURNING_THRESHOLD = 5;
@@ -45,8 +45,8 @@ public class Odometer implements Runnable {
     public static int nowTachoR;            // Current tacho R
 
 
-    private Object lock; /* lock object for mutual exclusion */
-    public Thread runner; 
+    /** lock object for mutual exclusion */private Object lock; 
+    /**Used to run the Odometer as a <b><code>Thread</code></b>*/public Thread runner; 
 
     // default constructor
     public Odometer() {

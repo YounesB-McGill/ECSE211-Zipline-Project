@@ -4,6 +4,7 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 import lejos.hardware.Button;
+import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 
 /**
@@ -70,15 +71,16 @@ public class Display implements Runnable {
             // Uncomment to print x,y,theta to console
             System.out.println(formattedDoubleToString(position[0], 2) + "," 
                              + formattedDoubleToString(position[1], 2) + "," 
-                             + formattedDoubleToString(position[2], 2)
+                             + formattedDoubleToString(position[2]*180/Math.PI, 2) + ","
+                             + formattedDoubleToString(LocalEV3.get().getPower().getVoltageMilliVolt(), 2)
             );
         } // end while(true)
     }
 
     /**
      * Formats a double into a String representation of a decimal number 
-     * @param x - The double to be converted
-     * @param places - The desired number of decimal places
+     * @param x The double to be converted
+     * @param places The desired number of decimal places
      * @return A string of the formatted double value
      */
     private static String formattedDoubleToString(double x, int places) {

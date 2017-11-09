@@ -61,6 +61,8 @@ public final class LightLocalizer extends Thread {
     
     /**
     * Do the LightLocalization
+    * @param X <i>x</i> coordinate
+    * @param Y <i>y</i> coordinate
     */
     public void doLightLocalization(int X, int Y) {
 
@@ -68,12 +70,7 @@ public final class LightLocalizer extends Thread {
         driveForward();
 
         // when hit a grid line, stop
-        while (true) {
-            if (hitGridLine()) {
-                Sound.beep();
-                break;
-            }
-        }
+        stopAtGridline();
 
         // drive backward a bit
         driveBackABit();
@@ -85,15 +82,9 @@ public final class LightLocalizer extends Thread {
 
         driveForward();
 
-        // when hit a grid line, stop
-        while (true) {
-            if (hitGridLine()) {
-                Sound.beep();
-                break;
-            }
-        }
+        stopAtGridline();
 
-        // drive backward certain distance
+        // drive backward a small distance
         driveBackABit();
 
         // do a 360 degree clockwise turn, record 4 heading degrees
@@ -124,10 +115,7 @@ public final class LightLocalizer extends Thread {
         Sound.beep();
 
         navigation.travelTo(X, Y);
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-        }
+        try { Thread.sleep(3000); } catch (InterruptedException e) {}
         navigation.turnTo(navigation.transferAngle(0));
 
         // correction
@@ -143,11 +131,20 @@ public final class LightLocalizer extends Thread {
         rightMotor.stop(true);
         leftMotor.endSynchronization();
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-        }
+        try { Thread.sleep(3000); } catch (InterruptedException e) {}
 
+    }
+
+    /**
+     * Stop at gridline
+     */
+    public void stopAtGridline() {
+        while (true) {
+            if (hitGridLine()) {
+                Sound.beep();
+                break;
+            }
+        }
     }
     
     /**
@@ -291,8 +288,8 @@ public final class LightLocalizer extends Thread {
 
     /**
     * Convert to wheel rotations based on the wheel radius and travel distance
-    * @param {double} radius - Wheel radius of the regular EV3 wheels
-    * @param {double} distance - Desired distance to travel
+    * @param radius Wheel radius of the regular EV3 wheels
+    * @param distance Desired distance to travel
     * @returns Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertDistance(double radius, double distance) {
@@ -301,9 +298,9 @@ public final class LightLocalizer extends Thread {
 
     /**
     * Calls convertDistance to get wheel rotations based on the wheel radius, width, and angle
-    * @param {double} radius - Wheel radius of the regular EV3 wheels
-    * @param {double} width - Width of the robot (TRACK)
-    * @param {double} angle - Angle that defines the distance
+    * @param radius Wheel radius of the regular EV3 wheels
+    * @param width Width of the robot (TRACK)
+    * @param angle Angle that defines the distance
     * @returns Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertAngle(double radius, double width, double angle) {
