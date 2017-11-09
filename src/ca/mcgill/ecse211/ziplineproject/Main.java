@@ -132,9 +132,9 @@ public class Main {
         setTeamColor();
         //startCorner = Display.getStartCornerUI();
         
-        //Test.testOdometer();
+        //TestOdometer.testOdometer();
         TestNavigation.testNavigation();
-        Test.testLightLocalizer();
+        TestLightLocalizer.testLightLocalizer();
 
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
@@ -160,71 +160,15 @@ public class Main {
     
     /*************************************************************************************************/
 
-    // Moved to Display class
-    /*public static void setStartCorner() {
-        do {
-            // clear the display
-            textLCD.clear();
-            textLCD.drawString(" Choose starting", 0, 0);
-            textLCD.drawString("     corner:    ", 0, 1);
-            textLCD.drawString("start from " + startCorner, 0, 2);
-            textLCD.drawString("Left/right to   ", 0, 3);
-            textLCD.drawString("change.         ", 0, 4);
-            textLCD.drawString("Press center    ", 0, 5);
-            textLCD.drawString("button to confirm", 0, 6);
-
-            buttonChoice = Button.waitForAnyPress();
-
-            if ((buttonChoice == Button.ID_RIGHT) && startCorner < 3) {
-                startCorner++;
-            } else if ((buttonChoice == Button.ID_LEFT) && startCorner > 0) {
-                startCorner--;
-            }
-        } while (buttonChoice != Button.ID_ENTER);
-    }*/
-
-    // Moved to Display class
-    /*private static void setXY() {
-        int buttonChoice;
-        do {
-            // clear the display
-            drawSetXYUI();
-            buttonChoice = Button.waitForAnyPress();
-
-            if ((buttonChoice == Button.ID_RIGHT) && x0 < 8) {
-                x0++;
-            } else if ((buttonChoice == Button.ID_LEFT) && x0 > 0) {
-                x0--;
-            } else if ((buttonChoice == Button.ID_UP) && y0 < 8) {
-                y0++;
-            } else if ((buttonChoice == Button.ID_DOWN) && y0 > 0) {
-                y0--;
-            }
-        } while (buttonChoice != Button.ID_ENTER);
-    }*/
     
-    // Moved to Display class
-    /*private static void drawSetXYUI() {
-        textLCD.clear();
-        textLCD.drawString("   Choose x,y   ", 0, 0);
-        textLCD.drawString("   coordinate:  ", 0, 1);
-        textLCD.drawString(" x=" + x0 + "    y=" + y0, 0, 2);
-        textLCD.drawString("left/right for x ", 0, 3);
-        textLCD.drawString("up/down for y   ", 0, 4);
-        textLCD.drawString("press center    ", 0, 5);
-        textLCD.drawString("button to confirm", 0, 6);
-    }*/
-
     // These methods are for internal testing and are therefore excluded from the API
     /*public static void dispose(Thread thread) {
-        try {
-            thread.join(); // wait till thread dies
+        try { thread.join(); // wait till thread dies
         } catch (InterruptedException e) {}
     }
     
     public static void waitForever() {
-        try {
-            Thread.sleep(60*60*1000);
+        try { Thread.sleep(60*60*1000);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -232,8 +176,7 @@ public class Main {
     }
     
     public static void endProgram() {
-        try {
-            throw new Exception();
+        try { throw new Exception();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
