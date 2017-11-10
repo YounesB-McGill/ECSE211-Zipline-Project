@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.ziplineproject;
 
+
 import ca.mcgill.ecse211.ziplineproject.UltrasonicLocalizer.LocalizationType;
 import lejos.hardware.Button;
 import lejos.hardware.Device;
@@ -133,7 +134,7 @@ public class Main {
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
-        TestNavigation.testNavigation();
+        //TestNavigation.testNavigation();
         TestLightLocalizer.testLightLocalizer();
 
         
