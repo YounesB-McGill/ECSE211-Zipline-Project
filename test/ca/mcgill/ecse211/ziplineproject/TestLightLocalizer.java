@@ -41,14 +41,33 @@ public class TestLightLocalizer {
         // Set odometer to start at (1,1)
         odometer.setX(1*TILE); odometer.setY(1*TILE);
         
-        //navigation.travelTo(2, 3);
+        //navigation.travelTo(1, 3);
         //navigation.travelTo(3, 2);
         
-        LightLocalizer lo=new LightLocalizer();
+        LightLocalizer lo=new LightLocalizer(0);
         //lo.dotest();
-        lo.doLightLocalizationNew(3, 2);
+        lo.start();
+        dispose(lo);
         
+        Navigation na=new Navigation();
+        na.start();
+        dispose(na);
+        
+        LightLocalizer lo1=new LightLocalizer(1);
+        lo1.start();
+        dispose(lo1);
+        
+        TraverseZipline tz= new TraverseZipline(2,2);
+        tz.start();
+        dispose(tz);
+      
         // TODO Assert result
+    }
+    
+    public static void dispose(Thread thread) {
+        try {
+            thread.join(); // wait till thread dies
+        } catch (InterruptedException e) {}
     }
     
 }
