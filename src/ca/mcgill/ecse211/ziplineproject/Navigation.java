@@ -117,8 +117,6 @@ public class Navigation {
         try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
          
         // travel to destination
-        setSpeed(0);
-        setSpeed(speed);
         travelFor(distance);
          
         isTraveling = false;
@@ -259,44 +257,16 @@ public class Navigation {
     }
 
     /**
-     * Set the speed for the left motor.
-     * @param speed The speed of the motor in degrees per second
-     */
-    public static void setLeftSpeed(float speed) {
-        leftMotor.setSpeed(speed);
-    }
-
-    /**
-     * Set the speed for the right motor.
-     * @param speed The speed of the motor in degrees per second
-     */
-    public static void setRightSpeed(float speed) {
-        rightMotor.setSpeed(speed);
-    }
-    
-    /**
      * Set the speed for both the left and right motors.
      * @param speed The speed of the motor in degrees per second
      */
     public static void setSpeed(float speed) {
-        setLeftSpeed(speed);
-        setRightSpeed(speed);
-    }
-    
-    /**
-     * Set the acceleration for the left motor.
-     * @param acceleration The acceleration of the motor in degrees per second squared
-     */
-    public static void setLeftAcceleration(int acceleration) {
-        leftMotor.setAcceleration(acceleration);
-    }
-
-    /**
-     * Set the acceleration for the right motor.
-     * @param acceleration The acceleration of the motor in degrees per second squared
-     */
-    public static void setRightAcceleration(int acceleration) {
-        rightMotor.setAcceleration(acceleration);
+        // Clear default speed value
+        leftMotor.setSpeed(0);
+        rightMotor.setSpeed(0);
+        // Set the speed level to the parameter
+        leftMotor.setSpeed(speed);
+        rightMotor.setSpeed(speed);
     }
     
     /**
@@ -304,90 +274,14 @@ public class Navigation {
      * @param acceleration The acceleration of the motor in degrees per second squared
      */
     public static void setAcceleration(int acceleration) {
-        setLeftAcceleration(acceleration);
-        setRightAcceleration(acceleration);
-    }
-    
-    
-    // These methods will be removed/refactored
-    
-    /* The forward and backward methods have been removed, since they could be used unsafely, 
-     * when the motor speed or acceleration has not been defined */
-    
-    /** This method has been removed. Use forwardLeft(float speed). */
-    public static void forwardLeft(){showMessageDialog(null, "This method has been removed. Use forwardLeft(float speed).");}
-    
-    /** This method has been removed. Use forwardRight(float speed). */
-    public static void forwardRight(){showMessageDialog(null, "This method has been removed. Use forwardRight(float speed).");}
-
-    /** This method has been removed. Use forward(float speed). */
-    public static void forward(){showMessageDialog(null, "This method has been removed. Use forward(float speed).");}
-    
-    /** This method has been removed. Use backwardLeft(float speed). */
-    public static void backwardLeft(){showMessageDialog(null, "This method has been removed. Use backwardLeft(float speed).");}
-    
-    /** This method has been removed. Use backwardRight(float speed). */
-    public static void backwardRight(){showMessageDialog(null, "This method has been removed. Use backwardRight(float speed).");}
-
-    /** This method has been removed. Use backwardRight(float speed). */
-    public static void backward(){showMessageDialog(null, "This method has been removed. Use backward(float speed).");}
-    
-    /*****************/
-    
-    /**
-     * Make left motor go forward
-     * @param speed value in degrees/sec 
-     */
-    public static void forwardLeft(float speed){
-        // Stop motor and clear default speed and acceleration values
-        leftMotor.stop(true); // continue the rest of the code while motor is stopped
+        // Clear default acceleration value
         leftMotor.setAcceleration(0);
-        leftMotor.setSpeed(0);
-        
-        // Set the speed to the desired level and move motor
-        leftMotor.setAcceleration(forwardAcceleration);
-        leftMotor.setSpeed(speed);
-        leftMotor.forward();
-    }
-    
-    /**
-     * Make right motor go forward
-     * @param speed value in degrees/sec 
-     */
-    public static void forwardRight(float speed){
-        rightMotor.stop(true); // continue the rest of the code while motor is stopped
         rightMotor.setAcceleration(0);
-        rightMotor.setSpeed(0);
-        
-        // Set the speed to the desired level and move motor
-        rightMotor.setAcceleration(forwardAcceleration);
-        rightMotor.setSpeed(speed);
-        rightMotor.forward();
-    }
-
-    /**
-     * Make both right and left motors go forward
-     * @param speed value in degrees/sec
-     */
-    public static void forward(float speed){
-        forwardLeft(speed);
-        forwardRight(speed);
+        // Set the acceleration level to the parameter
+        leftMotor.setAcceleration(acceleration);
+        rightMotor.setAcceleration(acceleration);
     }
     
-    /**
-     * Make left motor go backward
-     * @param speed value in degrees/sec
-     */
-    public static void backwardLeft(float speed){
-        leftMotor.stop(true); // continue the rest of the code while motor is stopped
-        leftMotor.setAcceleration(0);
-        leftMotor.setSpeed(0);
-        
-        // Set the speed to the desired level and move motor
-        leftMotor.setAcceleration(forwardAcceleration);
-        leftMotor.setSpeed(speed);
-        leftMotor.backward();
-    }
     
     /**
      * Make right motor go backward
@@ -404,14 +298,6 @@ public class Navigation {
         rightMotor.backward();
     }
 
-    /**
-     * Make both right and left motors go backward
-     * @param speed value in degrees/sec
-     */
-    public static void backward(float speed){
-        backwardLeft(speed);
-        backwardRight(speed);
-    }
     
     /*****************/
     
@@ -421,6 +307,8 @@ public class Navigation {
      * @param distance Desired distance in cm.
      */
     public static void travelFor(double distance){
+        setSpeed(0);
+        setSpeed(speed);
         setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
@@ -521,10 +409,10 @@ public class Navigation {
      * @param angle In degrees
      * @return Angle in degrees converted to polar coordinate
      */
-    public double transferAngle(double angle) {
+    /*public double convertAngleToPolar(double angle) {
         angle = (360.0 - angle) + 90.0;
         return angle;
-    }
+    }*/
     
     /**
      * Takes an angle in degrees
