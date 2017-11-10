@@ -20,7 +20,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
  * @author Chaoyi Liu
  *
  */
-public class Navigation {
+public class Navigation extends Thread{
     
     //initializing variables
     /**The radius of the robot's wheel*/public static final double WHEEL_RADIUS = Main.WHEEL_RADIUS;
@@ -68,14 +68,15 @@ public class Navigation {
     }
     
     public void run(){
-      
+      /*
         for(int i =0; i <= points.length; i++){
             // Remember last point before obstacle is encountered
             setXBefore((int) points[version-1][i][0]);
             setYBefore((int) points[version-1][i][1]);
             
             travelTo( points[version-1][i][0], points[version-1][i][1] );
-        }
+        }*/
+    	travelTo(2,1);
     }
 
     /**
@@ -242,7 +243,7 @@ public class Navigation {
         
         double deltaTheta;
         if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
-            // No discontinuity in either 180° or 360° scale
+            // No discontinuity in either 180ï¿½ or 360ï¿½ scale
             deltaTheta = Math.abs(theta - currTheta);
             if(currTheta>theta) {
                 // Turn left by deltaTheta
@@ -261,21 +262,21 @@ public class Navigation {
             double deltaTheta180 = Math.abs(theta-currTheta);
             double deltaTheta360 = Math.abs(theta360-currTheta360);
             if(deltaTheta180 <= deltaTheta360) {
-                // Use 180° scale
+                // Use 180ï¿½ scale
                 if(currTheta>theta) {
-                    // Turn left by deltaTheta in the 180° scale
+                    // Turn left by deltaTheta in the 180ï¿½ scale
                     turnLeftBy(deltaTheta180);
                 } else {
-                    // Turn right by deltaTheta in the 180° scale
+                    // Turn right by deltaTheta in the 180ï¿½ scale
                     turnRightBy(deltaTheta180);
                 }
             } else {
-                // Use 360° scale
+                // Use 360ï¿½ scale
                 if(currTheta360>theta360) {
-                    // Turn left by deltaTheta in the 360° scale
+                    // Turn left by deltaTheta in the 360ï¿½ scale
                     turnLeftBy(deltaTheta360);
                 } else {
-                    // Turn right by deltaTheta in the 360° scale
+                    // Turn right by deltaTheta in the 360ï¿½ scale
                     turnRightBy(deltaTheta360);
                 }
             }
@@ -320,6 +321,10 @@ public class Navigation {
      * @param angle
      */
     public static void turnRightBy(double angle){
+    	if(angle == -180){
+    		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+    	}
         angle = convertAngleTo180Scale(angle);
         if(angle < 0) {
             turnLeftBy(-angle);
@@ -534,7 +539,7 @@ public class Navigation {
      * @return The converted angle in the scale [-180,180).
      */
     public static double convertAngleTo180Scale(double angle) {
-        // Wraparound 360°
+        // Wraparound 360ï¿½
         angle %= 360;
         if(angle>=180) {
             angle -= 360;

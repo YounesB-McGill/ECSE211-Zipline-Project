@@ -24,7 +24,7 @@ public final class LightLocalizer extends Thread {
 	private static final int ROTATE_SPEED = 80;
 	private static final int ACCE_SPEED = 150;
 	private static final int forDis = 15;
-	private static final double sensorDis = -8; // -4
+	private static final double sensorDis = -11; // -4
 	private static final double TILE = Main.TILE;
 	private double intensity;
 	private int startCorner = Main.startCorner;
@@ -39,17 +39,18 @@ public final class LightLocalizer extends Thread {
 	private SampleProvider lightIntensity;
 	private int sampleSize;
 	private float[] csData;
+	private int type;
 	// Setting up the light sensor
 
 	/*
 	 * LightLocalizer Constructor
 	 */
-	public LightLocalizer() {
+	public LightLocalizer(int type) {
 
 		this.lightIntensity = colorSensor.getRedMode();
 		this.sampleSize = lightIntensity.sampleSize();
 		this.csData = new float[sampleSize];
-
+		this.type=type;
 		leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
 	}
 
@@ -57,18 +58,15 @@ public final class LightLocalizer extends Thread {
 	 * Run the LightLocalization
 	 */
 	public void run() {
-		doLightLocalization(0, 0);
+		if(type==0)	{
+			doLightLocalizationBegin();
+			doLightLocalizationNew(1, 1);
+		}
+		if(type==1) doLightLocalizationNew(2, 1);
 	}
 
-	/**
-	 * Do the LightLocalization
-	 * 
-	 * @param X
-	 *            <i>x</i> coordinate
-	 * @param Y
-	 *            <i>y</i> coordinate
-	 */
-	public void doLightLocalization(int X, int Y) {
+	
+	public void doLightLocalizationBegin() {
 
 		// drive forwards
 		driveForward();
@@ -91,7 +89,7 @@ public final class LightLocalizer extends Thread {
 		// drive backward a small distance
 		driveBackABit();
 
-		// do a 360 degree clockwise turn, record 4 heading degrees
+	/*	// do a 360 degree clockwise turn, record 4 heading degrees
 		setRotateSpeed();
 		clockwise();
 		double[] heading = new double[4];
@@ -142,7 +140,292 @@ public final class LightLocalizer extends Thread {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 		}
+*/
+	}
 
+	/**
+	 * do test things, ignore it 
+	 *//*
+	public void dotest() {
+		//clockwise(90, false);
+		// counterclockwise(90,false);
+		// driveForward(30.98,false);
+		// driveBackABit();
+		//navigation.turnLeftBy(90);
+	    //navigation.turnTo(180);
+		int button = 0;
+
+		while (button == 0)
+			button = Button.waitForAnyPress();
+		dotest();
+	}
+	*/
+	
+/**
+	 *   This is the new LightLocalization method, which fits for localizing at any point 
+	 * on the Panel. The argument X and Y is the approximate coordinates of the robot's 
+	 * location.
+	 * 
+	 * @param X
+	 *            <i>x</i> coordinate
+	 * @param Y
+	 *            <i>y</i> coordinate
+	 */
+	public void doLightLocalizationNew(int X, int Y) {
+		// turn 360 degrees
+		clockwise(360, true);
+
+		// record a heading when detect a grid line
+		double[] heading = new double[4];
+		int i = 0;
+		while (leftMotor.isMoving() && i < 4) {
+			if (hitGridLine()) {
+				Sound.beep();
+				heading[i] = odometer.getTheta() * 180 / Math.PI;
+				i++;
+			}
+		}
+
+        //if detect less than 4 grid line, the location is not good
+        //and need to move to a better location
+		if (i < 4) {
+			Sound.beepSequenceUp();
+			Sound.beepSequenceUp();
+			// move to a better location, and do it again
+			if (i == 0 || i == 1) {
+				//the robot locate at the center of a block
+				//so we drive forward until we find a grid line
+				driveForward();
+				while (true) {
+					if (hitGridLine()) {			
+						stopMotor();
+						Sound.beep();
+						break;
+					}
+				}
+				driveBackABit();
+				
+			} else if (i == 2) {
+				// the robot locates on a line 
+				//so we follow the line to find a point 
+				navigation.turnTo(heading[1]);
+				driveForward(12, false);
+			} else if (i == 3){
+				double[] angle = new double[3];
+				angle = getAngles(heading, angle);
+				double MinAng = Math.min(angle[0], Math.min(angle[1], angle[2]));
+				double directionAngle = findNewDirection(heading, angle, MinAng);
+				//here turnTo method go to the reverse direction, so I just drive backwards
+				navigation.turnTo(directionAngle);
+				driveForward(-10, false);
+			}
+			
+			//recursively call doLightLocalization
+			doLightLocalizationNew(X, Y);
+			return;
+		}
+
+		// find the 4 angles between 4 headings and find the Minimum value between them
+		double[] angle = new double[4];
+		angle = getAngles(heading, angle);
+		double MinAng = Math.min(angle[0], Math.min(angle[1], Math.min(angle[2], angle[3])));
+
+		
+		//if there is an angle too small(less than 40 degrees), 
+		//then the location of robot is not good.
+		if (MinAng < 40) {
+			Sound.beepSequence();
+			Sound.beepSequence();
+			// move to a better location, and do it again
+			// here we move to the direction of the smallest angle
+			double directionAngle = findNewDirection(heading, angle, MinAng);
+			//here turnTo method go to the reverse direction, so I just drive backwards
+			navigation.turnTo(directionAngle);
+			driveForward(-10, false);
+			//recursively call doLightLocalization
+			doLightLocalizationNew(X, Y);
+			return;
+		}
+
+		
+		// now the location is good, do the real light localization
+		// first calculate according to headings
+		double theta1 = calAng(heading[1], heading[3]);
+		double direction1 = calAveAng(heading[1], heading[3]);
+		double distance1 = sensorDis * Math.cos((Math.PI * theta1 / 180) / 2);
+
+		double theta2 = calAng(heading[0], heading[2]);
+		double direction2 = calAveAng(heading[0], heading[2]);
+		double distance2 = sensorDis * Math.cos((Math.PI * theta2 / 180) / 2);
+
+		
+		// do the localization
+		navigation.turnTo(direction1);
+		driveForward(distance1, false);
+		navigation.turnTo(direction2);
+		driveForward(distance2, false);
+
+		// stop motor
+		stopMotor();
+		Sound.beepSequenceUp();
+		
+		//find the actual location x,y
+		double currentX=findClosestCoordinate(odometer.getX(),X*TILE);
+		double currentY=findClosestCoordinate(odometer.getY(),Y*TILE);
+		
+		// set odometer
+		odometer.setX(currentX);
+		odometer.setY(currentY);
+
+		// turn 360 degrees
+		clockwise(360, true);
+
+		//when a grid line is detected, 
+		//stop and set Theta to the closest direction between 4 directions
+		while (leftMotor.isMoving()) {
+			if (hitGridLine()) {			
+				stopMotor();
+				Sound.beep();
+				break;
+			}
+		}		
+		double currentTheta = odometer.getTheta() * 180 / Math.PI;
+		int calibration = setToClosestTheta(currentTheta);
+		odometer.setTheta(calibration * Math.PI / 180);
+
+		//driveForward(40,false);
+		/*// Wait for button press
+		int button = 0;
+		while (button == 0)
+			button = Button.waitForAnyPress();
+		doLightLocalizationNew(3, 2);*/
+
+	}
+
+	/**
+	 * On a panel, find the closest crossing point's coordinate value 
+	 * according to current value.
+	 * @param currentVal
+	 * @param estimateVal
+	 * @return
+	 */
+	private double findClosestCoordinate(double currentVal, double estimateVal) {
+		double calibratedVal=estimateVal;
+		while(Math.abs(calibratedVal-currentVal)> TILE/2){
+			if(calibratedVal>currentVal)
+				calibratedVal=calibratedVal-TILE;
+			else
+				calibratedVal=calibratedVal+TILE;
+		}	
+	    return calibratedVal;
+    }
+
+    /**
+     * When the robot locates exactly on a crossing point,
+     * we turn the robot until we detect a grid line.
+     * Now theta can have 4 possibilities: 0, 90, 180, 360.
+     * This method helps figure out which to choose between these 4 directions.
+     * It returns in degree.
+     * @param currTheta
+     * @return
+     */
+	private int setToClosestTheta(double currTheta) {
+		double[] error = new double[4];
+		double closestValue = 360;
+		int closest = 0;
+		for (int i = 0; i < 4; i++) {
+			error[i] = Math.abs(currTheta - i * 90);
+			if (closestValue > error[i]) {
+				closestValue = error[i];
+				closest = i * 90; // 2 is for the delay of stop
+			}
+		}
+		if (closestValue > 45) {
+			if (Math.abs(currTheta - 360) < 40)
+				closest = 0;
+		}
+		return closest;
+	}
+
+	/**
+	 *   When we detect 4 grid lines but there is an angle smaller
+	 * than a threshold(I set it as 40), the location of robot may not 
+	 * be good. Moving to the direction of the smallest angle can increase
+	 * the angle value. This method helps us find this direction.
+	 * it returns in degree.
+	 * @param heading
+	 * @param Angle
+	 * @param MinAng
+	 * @return
+	 */
+	private double findNewDirection(double[] heading, double[] Angle, double MinAng) {
+		double direction = 0;
+		for (int i = 0; i < heading.length; i++) {
+			if (Angle[i] == MinAng) {
+				if (i !=  heading.length-1) {
+					direction = calAveAng(heading[i], heading[i + 1]);
+				} else {
+					direction = calAveAng(heading[i], heading[0]);
+				}
+			}
+		}
+		return direction;
+	}
+
+	/**
+	 * Given 2 angles in degree, find the average angle between them. Wrap around 
+	 * take into consideration here.
+	 * It returns in degree.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private double calAveAng(double a, double b) {
+		double Ave;
+		if (a <= b) // normal condition
+			Ave = (a + b) / 2;
+		else { // when the second angle passes 0
+			Ave = ((a - 360) + b) / 2;
+			if (Ave < 0) {
+				Ave = Ave + 360;
+			}
+		}
+		return Ave;
+	}
+
+	/**
+	 * Give an array of headings, store the angle of neighboring headings in another array
+	 * @param heading
+	 * @param Angle
+	 * @return
+	 */
+	private double[] getAngles(double[] heading, double[] Angle) {
+		for (int i = 0; i < heading.length; i++) {
+			if (i != heading.length-1) {
+				Angle[i] = calAng(heading[i], heading[i + 1]);
+			} else {
+				Angle[i] = calAng(heading[i], heading[0]);
+			}
+		}
+		return Angle;
+	}
+	
+    
+	/**
+	 * Calculate the angle between 2 headings.
+	 * Wrap around take into consideration here.
+	 * It returns in degree.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private double calAng(double a, double b) {
+		double Ang;
+		if (a <= b) // normal condition
+			Ang = b - a;
+		else // when the second angle passes 0
+			Ang = b - (a - 360);
+		return Ang;
 	}
 
 	/**
@@ -183,193 +466,10 @@ public final class LightLocalizer extends Thread {
 
 	}
 
-	
-	public void dotest(){
-		//clockwise(90,false);
-		//counterclockwise(90,false);
-		//driveForward(30.98,false);
-		//driveBackABit();
-		navigation.turnTo(270);
-		navigation.turnTo(181);
-	}
-	
-	
-	public void doLightLocalizationNew(int X, int Y) {
-		// turn 360 degrees
-		clockwise(360,true);
-        
-		// record headings
-		double[] heading = new double[4];
-		int i = 0;
-		while (leftMotor.isMoving() && i<4) {
-			if (hitGridLine()) {
-				Sound.beep();
-				heading[i] = odometer.getTheta()*180/Math.PI;
-				i++;
-			}
-		}
-
-		
-		// check if detect 4 points
-		if (i < 4) {
-			Sound.beepSequenceUp();
-			Sound.beepSequenceUp();
-			// move to a better location, and do it again
-			if (i == 0 || i == 1 ) {
-				//wait to decide the direction
-				navigation.travelTo(X,Y);
-			} else if (i == 2 || i == 3) {
-				//wait to decide the direction
-				navigation.turnTo(heading[0]);
-			}
-
-			driveForward(10,false);
-			Sound.beep();
-			doLightLocalizationNew(X, Y);
-			return;
-		}
-
-		// find 4 angles and find the Min between them
-		double[] angle = new double[4];
-		angle = getAngles(heading, angle);
-		double MinAng = Math.min(angle[0], Math.min(angle[1], Math.min(angle[2], angle[3])));
-
-		// check if detect 4 correct points
-		if (MinAng < 40) {
-			Sound.beepSequence();
-			Sound.beepSequence();
-			// move to a better location, and do it again
-			double directionAngle = findNewDirection(heading, angle, MinAng);
-			navigation.turnTo(directionAngle);
-			driveForward(-10,false);
-			Sound.beep();
-			doLightLocalizationNew(X, Y);
-			
-			return;
-		}
-
-		// now the location is good, do the real light localization
-		// first calculate according to headings
-		double theta1 = calAng(heading[1], heading[3]);
-		double direction1 = calAveAng(heading[1], heading[3]);
-		double distance1 = sensorDis * Math.cos((Math.PI * theta1 / 180) / 2);
-
-		double theta2 = calAng(heading[0], heading[2]);
-		double direction2 = calAveAng(heading[0], heading[2]);
-		double distance2 = sensorDis * Math.cos((Math.PI * theta2 / 180) / 2);
-
-		// do the localization
-		navigation.turnTo(direction1);
-		driveForward(distance1,false);
-		Sound.beep();
-		navigation.turnTo(direction2);
-		driveForward(distance2,false);
-		
-		
-		//stop motor
-		stopMotor();
-		
-		Sound.beepSequenceUp();
-		// set odometer
-		odometer.setX(X * TILE);
-		odometer.setY(Y * TILE);
-		
-		
-		
-		// turn 360 degrees
-	    clockwise(360,true);
-	    
-	    while (leftMotor.isMoving() ) {
-			if (hitGridLine()) {
-				Sound.beep();
-				break;
-			}
-		}     
-	     stopMotor();
-		 double currentTheta=odometer.getTheta()*180/Math.PI;
-		 int calibration=setToClosestTheta(currentTheta);
-		 odometer.setTheta(calibration*Math.PI/180);
-		 
-		 
-		// Wait for button press
-        int button = 0;       
-        while (button == 0)
-            button = Button.waitForAnyPress();
-        doLightLocalizationNew(3,2);
-        
-
-	}
-
-	private int setToClosestTheta(double currTheta) {
-		double[] error =  new double[4];
-		double closestValue = 360;
-		int closest=0;
-		for (int i = 0; i < 4; i++) {
-			error[i]=Math.abs(currTheta-i*90);	
-			if(closestValue>error[i]){
-				closestValue=error[i];
-				closest=i*90;	//2 is for the delay of stop			
-			}		
-        }		
-		if(closestValue>45) {
-			if(Math.abs(currTheta-360)<40)
-				closest=0;
-		}
-			
-		return closest;
-	}
-
-	private double findNewDirection(double[] heading, double[] Angle, double MinAng) {
-		double direction = 0;
-		for (int i = 0; i < 4; i++) {
-			if (Angle[i] == MinAng) {
-				if (i != 3) {
-					direction = calAveAng(heading[i], heading[i + 1]);
-				} else {
-					direction = calAveAng(heading[3], heading[0]);
-				}
-			}
-		}
-		return direction;
-	}
-
-	private double calAveAng(double a, double b) {
-		double Ave;
-		if (a <= b) // normal condition
-			Ave = (a + b) / 2;
-		else { // when the second angle passes 0
-			Ave = ((a - 360) + b) / 2;
-			if (Ave < 0) {
-				Ave = Ave + 360;
-			}
-		}
-		return Ave;
-	}
-
-	// get the angles
-	private double[] getAngles(double[] heading, double[] Angle) {
-		for (int i = 0; i < 4; i++) {
-			if (i != 3) {
-				Angle[i] = calAng(heading[i], heading[i + 1]);
-			} else {
-				Angle[3] = calAng(heading[3], heading[0]);
-			}
-		}
-		return Angle;
-	}
-
-	// calculate the angle between 2 headings
-	private double calAng(double a, double b) {
-		double Ang;
-		if (a <= b) // normal condition
-			Ang = b - a;
-		else // when the second angle passes 0
-			Ang = b - (a - 360);
-		return Ang;
-	}
-
 	/**
 	 * Make both motors go forward for a certain distance
+	 * The second argument controls whether the next instruction(s)
+	 * should be executed when this rotation hasn't ended.
 	 */
 	private void driveForward(double distance, boolean con) {
 		setForwardSpeed();
@@ -377,14 +477,16 @@ public final class LightLocalizer extends Thread {
 		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
 		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
 		leftMotor.endSynchronization();
-		if(con==false){
-		  leftMotor.waitComplete();
-		  rightMotor.waitComplete();
+		if (con == false) {
+			leftMotor.waitComplete();
+			rightMotor.waitComplete();
 		}
 	}
 
 	/**
 	 * Make robot rotate clockwise for a certain angle
+	 * The second argument controls whether the next instruction(s)
+	 * should be executed when this rotation hasn't ended.
 	 */
 	private void clockwise(double theta, boolean con) {
 		setRotateSpeed();
@@ -392,15 +494,17 @@ public final class LightLocalizer extends Thread {
 		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		leftMotor.endSynchronization();
-		if(con==false){
-			  leftMotor.waitComplete();
-			  rightMotor.waitComplete();
-	    }
-	
+		if (con == false) {
+			leftMotor.waitComplete();
+			rightMotor.waitComplete();
+		}
+
 	}
 
 	/**
-	 * Make robot rotate counter clockwise for a certain angle
+	 * Make robot rotate counter clockwise for a certain angle.
+	 * The second argument controls whether the next instruction(s)
+	 * should be executed when this rotation hasn't ended.
 	 */
 	private void counterclockwise(double theta, boolean con) {
 		setRotateSpeed();
@@ -408,10 +512,10 @@ public final class LightLocalizer extends Thread {
 		leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		leftMotor.endSynchronization();
-		if(con==false){
-			  leftMotor.waitComplete();
-			  rightMotor.waitComplete();
-	    }
+		if (con == false) {
+			leftMotor.waitComplete();
+			rightMotor.waitComplete();
+		}
 	}
 
 	/**
@@ -427,6 +531,7 @@ public final class LightLocalizer extends Thread {
 	 * Make robot rotate clockwise
 	 */
 	private void clockwise() {
+		setRotateSpeed();
 		leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.backward();
@@ -437,6 +542,7 @@ public final class LightLocalizer extends Thread {
 	 * Make robot rotate counterclockwise
 	 */
 	private void counterclockwise() {
+		setRotateSpeed();
 		leftMotor.startSynchronization();
 		leftMotor.backward();
 		rightMotor.forward();
@@ -454,7 +560,7 @@ public final class LightLocalizer extends Thread {
 		leftMotor.waitComplete();
 		rightMotor.waitComplete();
 	}
-	
+
 	/**
 	 * Set acceleration of the motors
 	 */
@@ -491,14 +597,17 @@ public final class LightLocalizer extends Thread {
 	}
 
 	/**
-	 * Make both motors drive back a bit
+	 * Make both motors drive back a bit.
+	 * The next instruction will be executed after this rotation ends.
 	 */
 	private void driveBackABit() {
 		setForwardSpeed();
 		leftMotor.startSynchronization();
 		leftMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), true);
-		rightMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), false);
+		rightMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), true);
 		leftMotor.endSynchronization();
+		leftMotor.waitComplete();
+		rightMotor.waitComplete();
 	}
 
 	/**

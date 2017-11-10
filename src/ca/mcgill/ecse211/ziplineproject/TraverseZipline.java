@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.sensor.EV3ColorSensor;
 
 /**
  * This class contains the zipline traversal and dismount logic.
@@ -8,25 +9,26 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  *
  */
 public class TraverseZipline extends Thread{
-	private Odometer odometer;
-	private static EV3LargeRegulatedMotor leftMotor;
-	private static EV3LargeRegulatedMotor rightMotor;
-	private static EV3LargeRegulatedMotor traverseMotor;
-	private Navigation navigation;
+	
+
 	private int xc;
 	private int yc;
 
-	private static final int FORWARD_SPEED = 100;
+	private static final int FORWARD_SPEED = Main.FWD_SPEED;
 	private static final int TRAVERSE_SPEED = Main.TRAVERSE_SPEED;
 	private static final int SLOWDOWN_SPEED = 50;
+	public static final double WHEEL_RADIUS = Main.WHEEL_RADIUS;
+	public static final double TRACK = Main.TRACK;
+	
+	private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
+	private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;	
+	private EV3LargeRegulatedMotor traverseMotor=Main.traverseMotor;
+	private EV3ColorSensor colorSensor = Main.cSensor;
 
-	public TraverseZipline(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
-			EV3LargeRegulatedMotor traverseMotor, Navigation navi, int xc, int yc) {
-		this.odometer = odometer;
-		TraverseZipline.leftMotor = leftMotor;
-		TraverseZipline.rightMotor = rightMotor;
-		TraverseZipline.traverseMotor = traverseMotor;
-		navigation = navi;
+	private Odometer odometer = Main.odometer;
+	private Navigation navigation = Main.navigation;
+
+	public TraverseZipline(int xc, int yc) {
 		this.xc=xc;
 		this.yc=yc;
 
@@ -34,6 +36,9 @@ public class TraverseZipline extends Thread{
 
 	public void run() {
 
+		//navigation.turnTo(90);
+		//navigation.forward(2);
+		
 		// left and right motor still need to run
 		setSpeed(FORWARD_SPEED);
 		forward();
@@ -42,6 +47,8 @@ public class TraverseZipline extends Thread{
 		traverseMotor.setSpeed(TRAVERSE_SPEED);
 		traverseMotor.forward();
 		
+		
+		navigation.travelTo(xc,yc);
 		//navigation.moveTo(xc,yc); 
 
 		// because motors runs at the same speed, I wonder whether we can get distances traveled by odometer.
@@ -68,29 +75,31 @@ public class TraverseZipline extends Thread{
 		
 
 	}
+	
 
-	public static void setSpeed(float speed) {
+
+	public void setSpeed(float speed) {
 		setLeftSpeed(speed);
 		setRightSpeed(speed);
 	}
 
-	public static void setLeftSpeed(float speed) {
+	public void setLeftSpeed(float speed) {
 		leftMotor.setSpeed(speed);
 	}
 
-	public static void setRightSpeed(float speed) {
+	public void setRightSpeed(float speed) {
 		rightMotor.setSpeed(speed);
 	}
 
-	public static void forwardLeft() {
+	public void forwardLeft() {
 		leftMotor.forward();
 	}
 
-	public static void forwardRight() {
+	public void forwardRight() {
 		rightMotor.forward();
 	}
 
-	public static void forward() {
+	public void forward() {
 		forwardLeft();
 		forwardRight();
 	}

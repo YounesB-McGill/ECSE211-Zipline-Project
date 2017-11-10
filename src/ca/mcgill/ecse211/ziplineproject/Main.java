@@ -50,7 +50,7 @@ public class Main {
     
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 200;
     /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 50;
-    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 100;
+    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 250;
     
     /**The <i>x</i> coordinate of the zipline approach.*/public static int x0 = 0;
     /**The <i>y</i> coordinate of the zipline approach.*/public static int y0 = 0;
@@ -135,8 +135,8 @@ public class Main {
         
         //TestOdometer.testOdometer();
         //TestNavigation.testNavigation();
-        TestLightLocalizer.testLightLocalizer();
-
+        //TestLightLocalizer.testLightLocalizer();
+        TestTraverseZipline.testTraverseZipline();
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ;
