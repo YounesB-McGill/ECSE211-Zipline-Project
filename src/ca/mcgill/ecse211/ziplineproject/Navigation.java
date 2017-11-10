@@ -3,6 +3,9 @@ package ca.mcgill.ecse211.ziplineproject;
 import java.awt.*;
 import java.awt.event.*;
 
+//TODO Remove this when refactored code is working properly
+import static javax.swing.JOptionPane.showMessageDialog;
+
 import ca.mcgill.ecse211.ziplineproject.Odometer;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -17,7 +20,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
  * This class provides the logic needed for the robot to navigate the game field,
  * allowing it to travel to specified points and orient itself to various angles.
  * 
- * @author Chaoyi Liu
+ * @author Younes Boubekeur
  *
  */
 public class Navigation {
@@ -27,8 +30,9 @@ public class Navigation {
     /**The width of the robot */public static final double TRACK = Main.TRACK;
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = Main.TILE;
     
-    /**The speed at which the robot travels forward*/private static final int FORWARD_SPEED = Main.FWD_SPEED;
-    /**The speed at which the robot rotates*/public static final int ROTATE_SPEED = Main.ROTATE_SPEED;
+    /**The speed at which the robot travels forward*/private static int forwardSpeed = Main.FWD_SPEED;
+    /**The acceleration at which the robot travels forward*/private static int forwardAcceleration = Main.FWD_ACC;
+    /**The speed at which the robot rotates*/public static int rotateSpeed = Main.ROTATE_SPEED;
     
     
     /**The EV3 left motor*/public static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
@@ -41,30 +45,21 @@ public class Navigation {
     /**Used to synchronize access to a resource across multiple threads*/public Object lock;
 
     
-    // Points array of all possible trajectories
-    public static double[][][] points;
+    /** Points array of all possible trajectories */public static double[][][] points;
     public static int version;
     public static int xBefore;
     public static int yBefore;
-    
-    public static int x0;
-    public static int y0;
-    
-    double[] position = new double[3];
-    private double nowX;
-    private double nowY;
-    private double nowTheta;
 
-    public boolean isTurning = false;
-    public boolean isTraveling = false;
-    public boolean inDanger = false;
+
+    /**<b><code>true</code></b> if robot is currently turning in-place*/public boolean isTurning = false;
+    /**<b><code>true</code></b> if robot is traveling*/public boolean isTraveling = false;
+    /**<b><code>true</code></b> if robot is close to an obstacle*/public boolean inDanger = false;
     /** Track whether the robot has arrived to a destination*/public boolean reachedDestination = false;
     
     private static long SLEEPINT = 150;
     
     public Navigation(){
         lock = new Object();
-        //leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
     }
     
     public void run(){
@@ -83,152 +78,60 @@ public class Navigation {
      * @param x <i>x</i> coordinate based on gridlines
      * @param y <i>y</i> coordinate based on gridlines
      */
-     public void travelTo(double x, double y) {
-         
-         /*travelTo(0.1*x, 0.1*y, (int) (0.2*FORWARD_SPEED));
-         travelTo(0.2*x, 0.2*y, (int) (0.5*FORWARD_SPEED));
-         travelTo(0.5*x, 0.5*y, FORWARD_SPEED);
-         travelTo(0.8*x, 0.8*y, (int) (0.5*FORWARD_SPEED));
-         travelTo(x, y, (int) (0.2*FORWARD_SPEED));*/
-         
-         travelTo(x, y, (int) (FORWARD_SPEED));
-         
-         // Stop motors when we reach destination
-         //leftMotor.startSynchronization();
-         leftMotor.stop(true);
-         rightMotor.stop(true);
-         //leftMotor.endSynchronization();
-         
-     }
-     
-     public void travelTo(double x, double y, int speed) {
-         isTraveling = true;
-         // Convert to cm
-         x = x * TILE;
-         y = y * TILE;
-         
-         // getting the current position of robot
-         double currX = odometer.getX();
-         double currY = odometer.getY();
-         
-         double deltaX = x - currX;
-         double deltaY = y - currY;
-         
-         // getting the theta of the destination, converting to degrees
-         double destTheta = Math.atan2(deltaX, deltaY) * 180 / Math.PI;
-         
-         // getting distance needed to travel
-         double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-         
-         // turn to destination theta
-         setSpeed(0);
-         turnTo(destTheta);
-         
-         try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
-         
-         // travel to destination
-         setSpeed(0);
-         setSpeed(speed);
-         forward(distance);
-         
-         
-         isTraveling = false;
-         
-         // Chaoyi's old logic
-         /*x = x * TILE;
-         y = y * TILE;
-         getPosition(odometer);
-         // calculate the angle we need to turn to
-         double theta1 = Math.atan((y - nowY) / (x - nowX)) * 360.0 / (2 * Math.PI);
-         if (x - nowX < 0) {
-             theta1 = 180.0 + theta1;
-         }
-         // turn to the proper angle
-         turnTo(theta1);
-         // drive forward
-         leftMotor.setSpeed(speed);
-         rightMotor.setSpeed(speed);
-         forward();
-         // keep calling turnTo and checking the distance
-         while (true) {
-             getPosition(odometer);
-             // if we've reached our destination, break the loop
-             if (Math.abs(y - nowY) < 0.8 && Math.abs(x - nowX) < 0.8)
-                 break;
-         }*/
-         
-    } // end travelTo()
-    
-    /*public void moveTo(double x, double y) {
-        isTraveling = true;
-        x = x * TILE;
-        y = y * TILE;
-        while (isTraveling) { 
-            // getting the current position of robot
-            double currX = odometer.getX();
-            double currY = odometer.getY();
-            // getting the theta of the destination, converting to degrees
-            double destTheta = Math.atan2((x - currX), (y - currY)) * 180 / Math.PI;
-            // getting distance needed to travel
-            double deltaX = (x - currX);
-            double deltaY = (y - currY);
-            double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-            
-            // Rotate to point towards destination theta
-            turnTo(destTheta);
-            
-            try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
-            
-            forward(distance);
-
-            isTraveling = false;
-        }
+    public void travelTo(double x, double y) {
+        
+        travelTo(x, y, (int) (forwardSpeed));
+        
+        // Stop motors when we reach destination
+        leftMotor.stop(true);
+        rightMotor.stop(true);
     }
-    
-    public void moveToTrue(double x, double y) {
+     
+    /**
+     * Helper method for <b><code>travelTo()</code></b>. Makes robot travel to a certain point
+     * at a certain speed.
+     * @param x <i>x</i> coordinate based on gridlines
+     * @param y <i>y</i> coordinate based on gridlines
+     * @param speed The speed used to travel to (<i>x</i>, <i>y</i>)
+     */
+    public void travelTo(double x, double y, int speed) {
         isTraveling = true;
+        // Convert to cm
         x = x * TILE;
         y = y * TILE;
-        while (isTraveling) { 
-            // getting the current position of robot
-            double currX = odometer.getX();
-            double currY = odometer.getY();
-            // getting the theta of the destination, converting to degrees
-            double destTheta = Math.atan2((x - currX), (y - currY)) * 180 / Math.PI;
-            // getting distance needed to travel
-            double distance = Math.sqrt((x - currX) * (x - currX) + (y - currY) * (y - currY));
-            double deltaX = (x - currX);
-            double deltaY = (y - currY);
-            // Rotate to point towards destination theta
-            turnTo(destTheta);
-            
-            try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
-            
-            forwardTrue(distance);
-
-            isTraveling = false;
-        }
-    }*/
-
-    
-    /* (Template for a JavaDoc w picture)
-     * Turn to specified angle
-     * 
-     * <pre><img src="{@docRoot}/doc-files/surface-subway.png" /></pre>
-     * 
-     * @param theta Theta in degrees
-     * 
-     */
+         
+        // getting the current position of robot
+        double currX = odometer.getX(), currY = odometer.getY();
+        double deltaX = x - currX, deltaY = y - currY;
+         
+        // getting the theta of the destination, converting to degrees
+        double destTheta = Math.atan2(deltaX, deltaY) * 180 / Math.PI;
+       
+         // getting distance needed to travel
+        double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+        
+        // turn to destination theta
+        setSpeed(0);
+        turnTo(destTheta);
+        
+        try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
+         
+        // travel to destination
+        setSpeed(0);
+        setSpeed(speed);
+        travelFor(distance);
+         
+        isTraveling = false;
+    } // end travelTo()
 
     /**
     * Turn to specified angle
     * 
     * @param theta Theta in degrees
-    * 
     */
     public void turnTo(double theta) {
         isTurning = true;
-        double currTheta = odometer.getThetaInDegrees();
+        double currTheta = odometer.getThetaInDegrees(); // in 360째
         
         // Convert both thetas to [-180,180) scale
         theta = convertAngleTo180Scale(theta);
@@ -238,11 +141,11 @@ public class Navigation {
         otherSide = convertAngleTo180Scale(otherSide);
         
         setSpeed(0);
-        setSpeed(ROTATE_SPEED);
+        setSpeed(rotateSpeed);
         
         double deltaTheta;
         if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
-            // No discontinuity in either 180� or 360� scale
+            // No discontinuity in either 180째 or 360째 scale
             deltaTheta = Math.abs(theta - currTheta);
             if(currTheta>theta) {
                 // Turn left by deltaTheta
@@ -261,21 +164,21 @@ public class Navigation {
             double deltaTheta180 = Math.abs(theta-currTheta);
             double deltaTheta360 = Math.abs(theta360-currTheta360);
             if(deltaTheta180 <= deltaTheta360) {
-                // Use 180� scale
+                // Use 180째 scale
                 if(currTheta>theta) {
-                    // Turn left by deltaTheta in the 180� scale
+                    // Turn left by deltaTheta in the 180째 scale
                     turnLeftBy(deltaTheta180);
                 } else {
-                    // Turn right by deltaTheta in the 180� scale
+                    // Turn right by deltaTheta in the 180째 scale
                     turnRightBy(deltaTheta180);
                 }
             } else {
-                // Use 360� scale
+                // Use 360째 scale
                 if(currTheta360>theta360) {
-                    // Turn left by deltaTheta in the 360� scale
+                    // Turn left by deltaTheta in the 360째 scale
                     turnLeftBy(deltaTheta360);
                 } else {
-                    // Turn right by deltaTheta in the 360� scale
+                    // Turn right by deltaTheta in the 360째 scale
                     turnRightBy(deltaTheta360);
                 }
             }
@@ -284,28 +187,7 @@ public class Navigation {
         setSpeed(0);
 
         isTurning = false;
-        
-        // Chaoyi's old logic
-        /*isTurning = true;
-        // convert to polar coordinate
-        nowTheta = (360.0 - nowTheta) + 90.0;
-        if (nowTheta > 360.0)
-            nowTheta = nowTheta - 360.0;
-        // calculate the angle we need to turn
-        double turningTheta = theta - nowTheta;
-        // make sure it is the minimal angle
-        if (turningTheta > 180)
-            turningTheta = turningTheta - 360.0;
-        else if (turningTheta < -180)
-            turningTheta = turningTheta + 360.0;
-
-        // make a turn
-        leftMotor.setSpeed(ROTATE_SPEED);
-        rightMotor.setSpeed(ROTATE_SPEED);
-        leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, turningTheta), true);
-        rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, turningTheta), false);
-        isTurning = false;*/
-    }
+    } // end turnTo()
 
     /**
     * @returns <code>true</code> if the robot is either Navigating or Turning
@@ -315,12 +197,19 @@ public class Navigation {
     }
 
     /**
-     * Turn right by the number of degrees specified. This method is mutually recursive with 
-     * <b><code>turnLeftBy()</code></b> to guard against turning with a maximal angle.
+     * Turn right by the number of degrees specified with smooth acceleration. 
+     * This method is mutually recursive with <b><code>turnLeftBy()</code></b> 
+     * to guard against turning with a maximal angle.
      * @param angle
      */
     public static void turnRightBy(double angle){
+        setAcceleration(forwardAcceleration);
         angle = convertAngleTo180Scale(angle);
+        if(angle == -180) { // base case
+            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+            return;
+        }
         if(angle < 0) {
             turnLeftBy(-angle);
         } else {
@@ -331,11 +220,13 @@ public class Navigation {
     }
 
     /**
-     * Turn left by the number of degrees specified. This method is mutually recursive with 
-     * <b><code>turnRightBy()</code></b> to guard against turning with a maximal angle.
+     * Turn left by the number of degrees specified with smooth acceleration. 
+     * This method is mutually recursive with <b><code>turnRightBy()</code></b> 
+     * to guard against turning with a maximal angle.
      * @param angle
      */
     public static void turnLeftBy(double angle){
+        setAcceleration(forwardAcceleration);
         angle = convertAngleTo180Scale(angle);
         if(angle < 0) {
             turnRightBy(-angle);
@@ -394,7 +285,7 @@ public class Navigation {
     
     /**
      * Set the acceleration for the left motor.
-     * @param acceleration The acceleration of the motor in degrees per second 
+     * @param acceleration The acceleration of the motor in degrees per second squared
      */
     public static void setLeftAcceleration(int acceleration) {
         leftMotor.setAcceleration(acceleration);
@@ -402,7 +293,7 @@ public class Navigation {
 
     /**
      * Set the acceleration for the right motor.
-     * @param acceleration The acceleration of the motor in degrees per second
+     * @param acceleration The acceleration of the motor in degrees per second squared
      */
     public static void setRightAcceleration(int acceleration) {
         rightMotor.setAcceleration(acceleration);
@@ -410,91 +301,165 @@ public class Navigation {
     
     /**
      * Set the acceleration for both the left and right motors.
-     * @param acceleration The acceleration of the motor in degrees per second
+     * @param acceleration The acceleration of the motor in degrees per second squared
      */
     public static void setAcceleration(int acceleration) {
         setLeftAcceleration(acceleration);
         setRightAcceleration(acceleration);
     }
     
+    
+    // These methods will be removed/refactored
+    
+    /* The forward and backward methods have been removed, since they could be used unsafely, 
+     * when the motor speed or acceleration has not been defined */
+    
+    /** This method has been removed. Use forwardLeft(float speed). */
+    public static void forwardLeft(){showMessageDialog(null, "This method has been removed. Use forwardLeft(float speed).");}
+    
+    /** This method has been removed. Use forwardRight(float speed). */
+    public static void forwardRight(){showMessageDialog(null, "This method has been removed. Use forwardRight(float speed).");}
+
+    /** This method has been removed. Use forward(float speed). */
+    public static void forward(){showMessageDialog(null, "This method has been removed. Use forward(float speed).");}
+    
+    /** This method has been removed. Use backwardLeft(float speed). */
+    public static void backwardLeft(){showMessageDialog(null, "This method has been removed. Use backwardLeft(float speed).");}
+    
+    /** This method has been removed. Use backwardRight(float speed). */
+    public static void backwardRight(){showMessageDialog(null, "This method has been removed. Use backwardRight(float speed).");}
+
+    /** This method has been removed. Use backwardRight(float speed). */
+    public static void backward(){showMessageDialog(null, "This method has been removed. Use backward(float speed).");}
+    
+    /*****************/
+    
     /**
      * Make left motor go forward
+     * @param speed value in degrees/sec 
      */
-    public static void forwardLeft(){
+    public static void forwardLeft(float speed){
+        // Stop motor and clear default speed and acceleration values
+        leftMotor.stop(true); // continue the rest of the code while motor is stopped
+        leftMotor.setAcceleration(0);
+        leftMotor.setSpeed(0);
+        
+        // Set the speed to the desired level and move motor
+        leftMotor.setAcceleration(forwardAcceleration);
+        leftMotor.setSpeed(speed);
         leftMotor.forward();
     }
     
     /**
      * Make right motor go forward
+     * @param speed value in degrees/sec 
      */
-    public static void forwardRight(){
+    public static void forwardRight(float speed){
+        rightMotor.stop(true); // continue the rest of the code while motor is stopped
+        rightMotor.setAcceleration(0);
+        rightMotor.setSpeed(0);
+        
+        // Set the speed to the desired level and move motor
+        rightMotor.setAcceleration(forwardAcceleration);
+        rightMotor.setSpeed(speed);
         rightMotor.forward();
     }
 
     /**
      * Make both right and left motors go forward
+     * @param speed value in degrees/sec
      */
-    public static void forward(){
-        forwardLeft();
-        forwardRight();
+    public static void forward(float speed){
+        forwardLeft(speed);
+        forwardRight(speed);
     }
     
     /**
      * Make left motor go backward
+     * @param speed value in degrees/sec
      */
-    public static void backwardLeft(){
+    public static void backwardLeft(float speed){
+        leftMotor.stop(true); // continue the rest of the code while motor is stopped
+        leftMotor.setAcceleration(0);
+        leftMotor.setSpeed(0);
+        
+        // Set the speed to the desired level and move motor
+        leftMotor.setAcceleration(forwardAcceleration);
+        leftMotor.setSpeed(speed);
         leftMotor.backward();
     }
     
     /**
      * Make right motor go backward
+     * @param speed value in degrees/sec
      */
-    public static void backwardRight(){
+    public static void backwardRight(float speed){
+        rightMotor.stop(true); // continue the rest of the code while motor is stopped
+        rightMotor.setAcceleration(0);
+        rightMotor.setSpeed(0);
+        
+        // Set the speed to the desired level and move motor
+        rightMotor.setAcceleration(forwardAcceleration);
+        rightMotor.setSpeed(speed);
         rightMotor.backward();
     }
 
     /**
      * Make both right and left motors go backward
+     * @param speed value in degrees/sec
      */
-    public static void backward(){
-        backwardLeft();
-        backwardRight();
+    public static void backward(float speed){
+        backwardLeft(speed);
+        backwardRight(speed);
     }
     
+    /*****************/
+    
+    // Was forward(double distance)
     /**
-     * Go forward for a specified distance
+     * Go forward for a specified distance using smooth acceleration
      * @param distance Desired distance in cm.
      */
-    public static void forward(double distance){
+    public static void travelFor(double distance){
+        setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
     }
     
-    public static void forwardTrue(double distance){
+    // Was forwardTrue(double distance)
+    /**
+     * Go forward for a specified distance using smooth acceleration, but return immediately
+     * to calling thread.
+     * @param distance Desired distance in cm.
+     */
+    public static void travelForImmediateReturn(double distance){
+        setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
     }
 
+    // end refactoring
+    
+    
+    /** @return <b><code>true</code></b> if the robot is turning */
     public boolean getIsTurning() {
         synchronized (lock) { return isTurning; }
     }
 
+    /** @return <b><code>true</code></b> if the robot is traveling */
     public boolean getIsTraveling() {
         synchronized (lock) { return isTraveling; }
     }
 
+    /** @return <b><code>true</code></b> if the robot is near an obstacle */
     public boolean getInDanger() {
         synchronized (lock) { return inDanger; }
     }
 
-    public void setIsTurning(boolean isTurning) {
-        synchronized (lock) { this.isTurning = isTurning; }
-    }
-
-    public void setIsTraveling(boolean isTraveling) {
-        synchronized (lock) { this.isTraveling = isTraveling; }
-    }
-
+    /**
+     * Set <b><code>inDanger</code></b> based on the information obtained from the ultrasonic sensor
+     * @param inDanger
+     */
     public void setInDanger(boolean inDanger) {
         synchronized (lock) { this.inDanger = inDanger; }
     }
@@ -507,10 +472,12 @@ public class Navigation {
         rightMotor.stop();
     }
 
+    /**@return <i>x<sub>before</sub></i>*/
     public int getXBefore() {
         synchronized (lock) { return xBefore; }
     }
 
+    /**@return <i>y<sub>before</sub></i>*/
     public int getYBefore() {
         synchronized (lock) { return yBefore; }
     }
@@ -523,8 +490,38 @@ public class Navigation {
         synchronized (lock) { Navigation.yBefore = yBefore; }
     }
     
+    /**@return Forward speed*/
+    public int getForwardSpeed() {
+        synchronized (lock) { return forwardSpeed; }
+    }
+
+    /**@return Rotate speed*/
+    public int getRotateSpeed() {
+        synchronized (lock) { return rotateSpeed; }
+    }
+
+    /**
+     * Sets the forward speed
+     * @param speed
+     */
+    public void setForwardSpeed(int speed) {
+        synchronized (lock) { forwardSpeed = speed; }
+    }
+
+    /**
+     * Sets the rotate speed
+     * @param speed
+     */
+    public void setRotateSpeed(int speed) {
+        synchronized (lock) { rotateSpeed = speed; }
+    }
+
+    /**
+     * convert to polar coordinate
+     * @param angle In degrees
+     * @return Angle in degrees converted to polar coordinate
+     */
     public double transferAngle(double angle) {
-        // convert to polar coordinate
         angle = (360.0 - angle) + 90.0;
         return angle;
     }
@@ -534,7 +531,7 @@ public class Navigation {
      * @return The converted angle in the scale [-180,180).
      */
     public static double convertAngleTo180Scale(double angle) {
-        // Wraparound 360�
+        // Wraparound 360째
         angle %= 360;
         if(angle>=180) {
             angle -= 360;
@@ -543,16 +540,6 @@ public class Navigation {
             angle +=360;
         }
         return angle;
-    }
-    
-    /**
-    * Get position from odometer
-    */
-    void getPosition(Odometer odometer) {
-        odometer.getPosition(position, new boolean[] { true, true, true });
-        nowX = position[0];
-        nowY = position[1];
-        nowTheta = position[2];
     }
 
 }
