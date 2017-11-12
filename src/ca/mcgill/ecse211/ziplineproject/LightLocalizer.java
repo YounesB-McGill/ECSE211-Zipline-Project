@@ -207,7 +207,7 @@ public final class LightLocalizer extends Thread {
         stopMotor();
         double currentTheta = odometer.getThetaInDegrees();
         int calibration = setToClosestTheta(currentTheta);
-        odometer.setTheta((calibration * Math.PI / 180)-THETA_OFFSET);
+        odometer.setTheta((calibration * Math.PI / 180)-THETA_OFFSET* Math.PI / 180);
         
         /* STM MR-73 */{
             Sound.playNote(Sound.PIANO, 180*3, 450);
