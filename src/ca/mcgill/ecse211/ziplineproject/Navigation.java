@@ -3,9 +3,6 @@ package ca.mcgill.ecse211.ziplineproject;
 import java.awt.*;
 import java.awt.event.*;
 
-//TODO Remove this when refactored code is working properly
-import static javax.swing.JOptionPane.showMessageDialog;
-
 import ca.mcgill.ecse211.ziplineproject.Odometer;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -111,7 +108,6 @@ public class Navigation {
         double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
         
         // turn to destination theta
-        setSpeed(0);
         turnTo(destTheta);
         
         try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
@@ -137,9 +133,6 @@ public class Navigation {
         
         double otherSide = currTheta-180;
         otherSide = convertAngleTo180Scale(otherSide);
-        
-        setSpeed(0);
-        setSpeed(rotateSpeed);
         
         double deltaTheta;
         if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
@@ -195,47 +188,6 @@ public class Navigation {
     }
 
     /**
-     * Turn right by the number of degrees specified with smooth acceleration. 
-     * This method is mutually recursive with <b><code>turnLeftBy()</code></b> 
-     * to guard against turning with a maximal angle.
-     * @param angle
-     */
-    public static void turnRightBy(double angle){
-        setAcceleration(forwardAcceleration);
-        angle = convertAngleTo180Scale(angle);
-        if(angle == -180) { // base case
-            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
-            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
-            return;
-        }
-        if(angle < 0) {
-            turnLeftBy(-angle);
-        } else {
-            // Input is correct, so turn right
-            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
-            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
-        }
-    }
-
-    /**
-     * Turn left by the number of degrees specified with smooth acceleration. 
-     * This method is mutually recursive with <b><code>turnRightBy()</code></b> 
-     * to guard against turning with a maximal angle.
-     * @param angle
-     */
-    public static void turnLeftBy(double angle){
-        setAcceleration(forwardAcceleration);
-        angle = convertAngleTo180Scale(angle);
-        if(angle < 0) {
-            turnRightBy(-angle);
-        } else {
-            // Input is correct, so turn left
-            leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), true);
-            rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), false);
-        }
-    }
-
-    /**
     * Convert to wheel rotations based on the wheel radius and travel distance
     * @param radius Wheel radius of the regular EV3 wheels
     * @param distance Desired distance to travel
@@ -261,6 +213,9 @@ public class Navigation {
      * @param speed The speed of the motor in degrees per second
      */
     public static void setSpeed(float speed) {
+        // Stop both motors at once
+        leftMotor.stop(true); // boolean is for immediate return
+        rightMotor.stop(false);
         // Clear default speed value
         leftMotor.setSpeed(0);
         rightMotor.setSpeed(0);
@@ -274,6 +229,9 @@ public class Navigation {
      * @param acceleration The acceleration of the motor in degrees per second squared
      */
     public static void setAcceleration(int acceleration) {
+     // Stop both motors at once
+        leftMotor.stop(true); // boolean is for immediate return
+        rightMotor.stop(false);
         // Clear default acceleration value
         leftMotor.setAcceleration(0);
         rightMotor.setAcceleration(0);
@@ -282,33 +240,14 @@ public class Navigation {
         rightMotor.setAcceleration(acceleration);
     }
     
-    
-    /**
-     * Make right motor go backward
-     * @param speed value in degrees/sec
-     */
-    public static void backwardRight(float speed){
-        rightMotor.stop(true); // continue the rest of the code while motor is stopped
-        rightMotor.setAcceleration(0);
-        rightMotor.setSpeed(0);
-        
-        // Set the speed to the desired level and move motor
-        rightMotor.setAcceleration(forwardAcceleration);
-        rightMotor.setSpeed(speed);
-        rightMotor.backward();
-    }
-
-    
-    /*****************/
-    
     // Was forward(double distance)
     /**
      * Go forward for a specified distance using smooth acceleration
      * @param distance Desired distance in cm.
      */
     public static void travelFor(double distance){
-        setSpeed(0);
-        setSpeed(speed);
+        // Safely set the speed and acceleration
+        setSpeed(forwardSpeed);
         setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
@@ -321,13 +260,57 @@ public class Navigation {
      * @param distance Desired distance in cm.
      */
     public static void travelForImmediateReturn(double distance){
+        // Safely set the speed and acceleration
+        setSpeed(forwardSpeed);
         setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
     }
-
-    // end refactoring
     
+    /**
+     * Turn right by the number of degrees specified with smooth acceleration. 
+     * This method is mutually recursive with <b><code>turnLeftBy()</code></b> 
+     * to guard against turning with a maximal angle.
+     * @param angle
+     */
+    public static void turnRightBy(double angle){
+        // Safely set the speed and acceleration
+        setSpeed(rotateSpeed);
+        setAcceleration(forwardAcceleration);
+        angle = convertAngleTo180Scale(angle);
+        if(angle == -180) { // base case
+            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+            return;
+        }
+        if(angle < 0) {
+            turnLeftBy(-angle);
+        } else {
+            // Input is correct, so turn right
+            leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+        }
+    }
+
+    /**
+     * Turn left by the number of degrees specified with smooth acceleration. 
+     * This method is mutually recursive with <b><code>turnRightBy()</code></b> 
+     * to guard against turning with a maximal angle.
+     * @param angle
+     */
+    public static void turnLeftBy(double angle){
+        // Safely set the speed and acceleration
+        setSpeed(rotateSpeed);
+        setAcceleration(forwardAcceleration);
+        angle = convertAngleTo180Scale(angle);
+        if(angle < 0) {
+            turnRightBy(-angle);
+        } else {
+            // Input is correct, so turn left
+            leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), true);
+            rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+        }
+    }
     
     /** @return <b><code>true</code></b> if the robot is turning */
     public boolean getIsTurning() {
@@ -409,10 +392,10 @@ public class Navigation {
      * @param angle In degrees
      * @return Angle in degrees converted to polar coordinate
      */
-    /*public double convertAngleToPolar(double angle) {
+    public double transferAngle(double angle) {
         angle = (360.0 - angle) + 90.0;
         return angle;
-    }*/
+    }
     
     /**
      * Takes an angle in degrees
