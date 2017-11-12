@@ -16,7 +16,7 @@ import lejos.hardware.Sound;
  * 
  * @author Chaoyi Liu
  */
-public final class LightLocalizer extends Thread {
+public final class LightLocalizer { // Does NOT extend Thread, nor is it a Runnable
 
     private static double WHEEL_RADIUS = Main.WHEEL_RADIUS;
     private static double TRACK = Main.TRACK;
@@ -52,17 +52,11 @@ public final class LightLocalizer extends Thread {
         this.sampleSize = lightIntensity.sampleSize();
         this.csData = new float[sampleSize];
 
-        //leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
         navigation.setSpeed(Main.FWD_SPEED);
         navigation.setAcceleration(Main.FWD_ACC);
     }
 
-    /**
-     * Run the LightLocalization
-     */
-    public void run() {
-        doLightLocalization(0, 0);
-    }
+    // No run() method needed
 
     /**
      * Stop at gridline
@@ -79,7 +73,7 @@ public final class LightLocalizer extends Thread {
     /**
      * Reset the odometer based on the starting corner
      */
-    private void resetAccordingToCorner() {
+    public void resetAccordingToCorner() {
         if (startCorner == 0) {
             odometer.setX(1 * TILE);
             odometer.setY(1 * TILE);
@@ -112,7 +106,7 @@ public final class LightLocalizer extends Thread {
     }
 
     /**
-     * Do the LightLocalization
+     * Do the LightLocalization. This method is recursive.
      * 
      * @param X <i>x</i> coordinate
      * @param Y <i>y</i> coordinate
@@ -127,7 +121,7 @@ public final class LightLocalizer extends Thread {
         int i = 0;
         while (leftMotor.isMoving() && i < 4) {
             if (hitGridLine()) {
-                Sound.playNote(Sound.PIANO, 300+120*i, 250);
+                Sound.playNote(Sound.PIANO, 3*(180+60*i), 450);
                 heading[i] = odometer.getThetaInDegrees();
                 i++;
             }
@@ -207,7 +201,7 @@ public final class LightLocalizer extends Thread {
         stopMotor();
         double currentTheta = odometer.getThetaInDegrees();
         int calibration = setToClosestTheta(currentTheta);
-        odometer.setTheta((calibration * Math.PI / 180)-THETA_OFFSET* Math.PI / 180);
+        odometer.setTheta((calibration * Math.PI / 180));
         
         /* STM MR-73 */{
             Sound.playNote(Sound.PIANO, 180*3, 450);
@@ -215,14 +209,11 @@ public final class LightLocalizer extends Thread {
             Sound.playNote(Sound.PIANO, 360*3, 500);
         }
         
+        // TODO Calculate offset as a function of the distance
+        navigation.turnLeftBy(9);
+        odometer.setTheta(0); // Also change this based on odometer state
+        
         return;
-
-        // Wait for button press
-        /*int button = 0;
-        while (button == 0)
-            button = Button.waitForAnyPress();
-        doLightLocalizationNew(X, Y); // Was (2,3)*/
-
     }
 
     private int setToClosestTheta(double currTheta) {
@@ -294,21 +285,6 @@ public final class LightLocalizer extends Thread {
     }
 
     /**
-     * Make both motors go forward for a certain distance
-     */
-    /*private void driveForward(double distance, boolean con) {
-        setForwardSpeed();
-        //leftMotor.startSynchronization();
-        leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
-        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false); // changed to false
-        //leftMotor.endSynchronization();
-        /*if (con == false) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }*/
-    //}*/
-
-    /**
      * Make robot rotate clockwise for a certain angle
      */
     private void clockwise(double theta, boolean con) {
@@ -316,12 +292,6 @@ public final class LightLocalizer extends Thread {
         //leftMotor.startSynchronization();
         leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
         rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true); // immediate return
-        //leftMotor.endSynchronization();
-        /*if (con == false) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }*/
-
     }
 
     /**
@@ -332,11 +302,6 @@ public final class LightLocalizer extends Thread {
         //leftMotor.startSynchronization();
         leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
         rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-        //leftMotor.endSynchronization();
-        /*if (con == false) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }*/
     }
 
     /**
@@ -352,40 +317,24 @@ public final class LightLocalizer extends Thread {
      * Make robot rotate clockwise
      */
     private void clockwise() {
-        //leftMotor.startSynchronization();
         leftMotor.forward();
         rightMotor.backward();
-        //leftMotor.endSynchronization();
     }
 
     /**
      * Make robot rotate counterclockwise
      */
     public void counterclockwise() {
-        //leftMotor.startSynchronization();
         leftMotor.backward();
         rightMotor.forward();
-        //leftMotor.endSynchronization();
     }
 
     /**
      * Make robot stop
      */
     private void stopMotor() {
-        //leftMotor.startSynchronization();
         leftMotor.stop(true);
         rightMotor.stop(false);
-        /*leftMotor.endSynchronization();
-        leftMotor.waitComplete();
-        rightMotor.waitComplete();*/
-    }
-
-    /**
-     * Set acceleration of the motors
-     */
-    private void setAcce() {
-        leftMotor.setAcceleration(ACCE_SPEED);
-        rightMotor.setAcceleration(ACCE_SPEED);
     }
 
     /**
@@ -405,36 +354,20 @@ public final class LightLocalizer extends Thread {
     }
 
     /**
-     * Make both motors go forward
-     */
-    private void driveForward() {
-        setForwardSpeed();
-        //leftMotor.startSynchronization();
-        leftMotor.forward();
-        rightMotor.forward();
-        //leftMotor.endSynchronization();
-    }
-
-    /**
      * Make both motors drive back a bit
      */
     private void driveBackABit() {
         setForwardSpeed();
-        //leftMotor.startSynchronization();
         leftMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), true);
         rightMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), false);
-        //leftMotor.endSynchronization();
     }
 
     /**
      * Convert to wheel rotations based on the wheel radius and travel distance
      * 
-     * @param radius
-     *            Wheel radius of the regular EV3 wheels
-     * @param distance
-     *            Desired distance to travel
-     * @returns Number of degrees that motor must rotate to travel the required
-     *          distance
+     * @param radius Wheel radius of the regular EV3 wheels
+     * @param distance Desired distance to travel
+     * @returns Number of degrees that motor must rotate to travel the required distance     
      */
     private static int convertDistance(double radius, double distance) {
         return (int) ((180.0 * distance) / (Math.PI * radius));
@@ -444,14 +377,10 @@ public final class LightLocalizer extends Thread {
      * Calls convertDistance to get wheel rotations based on the wheel radius,
      * width, and angle
      * 
-     * @param radius
-     *            Wheel radius of the regular EV3 wheels
-     * @param width
-     *            Width of the robot (TRACK)
-     * @param angle
-     *            Angle that defines the distance
-     * @returns Number of degrees that motor must rotate to travel the required
-     *          distance
+     * @param radius Wheel radius of the regular EV3 wheels
+     * @param width Width of the robot (TRACK)
+     * @param angle Angle that defines the distance
+     * @returns Number of degrees that motor must rotate to travel the required distance
      */
     private static int convertAngle(double radius, double width, double angle) {
         return convertDistance(radius, Math.PI * width * angle / 360.0);
