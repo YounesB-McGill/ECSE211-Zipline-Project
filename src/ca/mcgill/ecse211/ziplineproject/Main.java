@@ -36,19 +36,20 @@ import lejos.robotics.SampleProvider;
  * the client:
  * </p>
  * 
- * <pre><img src="{@docRoot}/doc-files/competition.png" /></pre>
+ * <pre><img src="{@docRoot}/doc-files/competition.png"></img></pre>
  * 
  * @author Younes Boubekeur 
  */
 public class Main {
 
-    /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.13;
+    /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.115; // was 2.13
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
-    public static final double TRACK = 14.68; // was 14.80, then 15.0, then 15.2. 15.0 was better
+    public static final double TRACK = 14.68; // was 14.68, 14.80, 15.0, 15.2.
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     
-    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 200;
-    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 50;
+    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 280;
+    /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 135;
+    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 90;
     /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 100;
     
     /**The <i>x</i> coordinate of the zipline approach.*/public static int x0 = 0;
@@ -60,6 +61,8 @@ public class Main {
     public static int startCorner;
     /**<code>int</code> corresponding to the EV3 button being pressed.*/
     public static int buttonChoice;
+    /**Controls whether to print odometry and battery information to Console (and on the robot screen)*/
+    public static boolean printToConsole = true;
     
     /**
      * The Motors used in the application, namely 
@@ -133,12 +136,13 @@ public class Main {
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
-        TestNavigation.testNavigation();
+        //TestNavigation.testNavigation();
         TestLightLocalizer.testLightLocalizer();
-
+        //TestTraverseZipline.testTraverseZipline();
+        
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
-            ;
+            ; // do nothing
         System.exit(0);
     } // end main method
     

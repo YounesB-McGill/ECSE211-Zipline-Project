@@ -125,7 +125,7 @@ public class Navigation {
     */
     public void turnTo(double theta) {
         isTurning = true;
-        double currTheta = odometer.getThetaInDegrees(); // in 360Â°
+        double currTheta = odometer.getThetaInDegrees(); // in 360°
         
         // Convert both thetas to [-180,180) scale
         theta = convertAngleTo180Scale(theta);
@@ -136,7 +136,7 @@ public class Navigation {
         
         double deltaTheta;
         if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
-            // No discontinuity in either 180Â° or 360Â° scale
+            // No discontinuity in either 180° or 360° scale
             deltaTheta = Math.abs(theta - currTheta);
             if(currTheta>theta) {
                 // Turn left by deltaTheta
@@ -155,21 +155,21 @@ public class Navigation {
             double deltaTheta180 = Math.abs(theta-currTheta);
             double deltaTheta360 = Math.abs(theta360-currTheta360);
             if(deltaTheta180 <= deltaTheta360) {
-                // Use 180Â° scale
+                // Use 180° scale
                 if(currTheta>theta) {
-                    // Turn left by deltaTheta in the 180Â° scale
+                    // Turn left by deltaTheta in the 180° scale
                     turnLeftBy(deltaTheta180);
                 } else {
-                    // Turn right by deltaTheta in the 180Â° scale
+                    // Turn right by deltaTheta in the 180° scale
                     turnRightBy(deltaTheta180);
                 }
             } else {
-                // Use 360Â° scale
+                // Use 360° scale
                 if(currTheta360>theta360) {
-                    // Turn left by deltaTheta in the 360Â° scale
+                    // Turn left by deltaTheta in the 360° scale
                     turnLeftBy(deltaTheta360);
                 } else {
-                    // Turn right by deltaTheta in the 360Â° scale
+                    // Turn right by deltaTheta in the 360° scale
                     turnRightBy(deltaTheta360);
                 }
             }
@@ -243,14 +243,19 @@ public class Navigation {
     // Was forward(double distance)
     /**
      * Go forward for a specified distance using smooth acceleration
-     * @param distance Desired distance in cm.
+     * @param distance Desired distance in cm. If it negative, motor will go backward
      */
     public static void travelFor(double distance){
         // Safely set the speed and acceleration
         setSpeed(forwardSpeed);
         setAcceleration(forwardAcceleration);
-        leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
-        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
+        if(distance>=0) {
+            leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
+            rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
+        } else {
+            leftMotor.rotate(-convertDistance(WHEEL_RADIUS, Math.abs(distance)), true);
+            rightMotor.rotate(-convertDistance(WHEEL_RADIUS, Math.abs(distance)), false);
+        }
     }
     
     // Was forwardTrue(double distance)
@@ -402,7 +407,7 @@ public class Navigation {
      * @return The converted angle in the scale [-180,180).
      */
     public static double convertAngleTo180Scale(double angle) {
-        // Wraparound 360Â°
+        // Wraparound 360°
         angle %= 360;
         if(angle>=180) {
             angle -= 360;

@@ -44,193 +44,193 @@ public class UltrasonicLocalizer {
      * Do the ultrasonic localization
      */
     @SuppressWarnings("static-access")
-    public static void doLocalization(){
-        double[] pos = new double[3];
-        double angle1, angle2, deltAngle;
-        //clear the screen (removed)
-        //textLCD.clear(); 
-        //draw usData
-        System.out.println(getData());
-        
-        if(localType==LocalizationType.FALLING_EDGE){ //this means we have to rotate until wall is seen
-            while(getData()<DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set speed to the rotation speed
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn clockwise
-                navigation.forwardLeft();
-                navigation.backwardRight();
-            }
-            //stop the robot
-            leftMotor.stop();
-            rightMotor.stop();
-            
-            try{Thread.sleep(500);} catch(InterruptedException e){} //rotate until wall is seen, note the angle
-            
-            while(getData()==DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set speed to rotation speed
-                navigation.setSpeed((float) ROTATION_SPEED);
-                //turn clockwise
-                navigation.forwardLeft();
-                navigation.backwardRight();
-            }
-            //stop robot
-            leftMotor.stop();
-            rightMotor.stop();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle1 = odometer.getThetaInDegrees();
-            //draw the angle
-            System.out.println("Angle1 is: "+angle1);
-            //draw usData
-            System.out.println(getData());
-            while(getData() < DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set rotation speed to negative
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn counterclockwise
-                navigation.backwardLeft();
-                navigation.forwardRight();
-            }
-            //stop robot
-            leftMotor.stop();
-            rightMotor.stop();
-            //rotate until wall is seen, note angle 
-            while(getData() == DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set rotation speed to negative
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn counterclockwise
-                navigation.backwardLeft();
-                navigation.forwardRight();
-            }
-            //stop robot
-            leftMotor.stop();
-            rightMotor.stop();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle2 = odometer.getThetaInDegrees();
-            //draw angle
-            System.out.println("Angle2 is: "+angle2);
-            //draw usData
-            System.out.println(getData());
-            
-            if(Math.abs(angle1)<Math.abs(angle2)){                                          
-                //since angle1 is clockwise from angle2, average of angles right of angle2 is 45 deg
-                deltAngle = LARGE_ANGLE-((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);}
-                catch(InterruptedException e){}
-                navigation.turnTo(ORIGIN-180);
-                odometer.setTheta(0);
-            }
-            else{
-                deltAngle = SMALL_ANGLE+((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);}
-                catch(InterruptedException e){}
-                navigation.turnTo(ORIGIN-90);
-                odometer.setTheta(0);
-            }
-            //update position --> odometer.gettheta+deltAngle
-            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
-                    new boolean[] { true, true, true });*/
-            
-            
-        }
-        
-        else{ //RISING_EDGE
-            while (getData() == DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set RotationSpeed
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn clockwise
-                navigation.forwardLeft();
-                navigation.backwardRight();
-            }
-            //keep rotating until the robot sees no wall, then latch the angle
-            while (getData() < DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set RotationSpeed
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn clockwise
-                navigation.forwardLeft();
-                navigation.backwardRight();
-            }
-            try {Thread.sleep(500);}catch (InterruptedException e) {}
-            //stop robot
-            leftMotor.stop();
-            rightMotor.stop();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle1=odometer.getThetaInDegrees();
-            //draw angle
-            System.out.println("Angle1 is: "+angle1);
-            //draw usData
-            System.out.println(getData());
-            
-            // switch direction and wait until it sees a wall
-            while (getData() == DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set RotationSpeed to negative
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn counterclockwise
-                navigation.backwardLeft();
-                navigation.forwardRight();
-            }
-            
-            // rotate until no wall is seen, note angle
-            while (getData() < DISTANCE_CAP){
-                //draw usData
-                System.out.println(getData());
-                //set rotation speed to negative
-                navigation.setSpeed((float) ROTATION_SPEED);
-                // turn counterclockwise
-                navigation.backwardLeft();
-                navigation.forwardRight();
-            }
-            //stop robot
-            leftMotor.stop();
-            rightMotor.stop();
-            
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle2=odometer.getThetaInDegrees();
-            //draw angle
-            System.out.println("Angle2 is: "+angle2);
-            //draw usData
-            System.out.println(getData());
-
-            if(Math.abs(angle1)<Math.abs(angle2)){
-                deltAngle = LARGE_ANGLE - ((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);} 
-                catch (InterruptedException e) {}
-                navigation.turnTo(ORIGIN+10);
-                odometer.setTheta(0);
-            } else if(Math.abs(angle1)>Math.abs(angle2)) {
-                deltAngle = SMALL_ANGLE + ((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);} 
-                catch (InterruptedException e) {}
-                navigation.turnTo(-ORIGIN-90);
-                odometer.setTheta(0);
-            }
-            //update position --> odometer.gettheta+deltAngle
-            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
-                    new boolean[] { true, true, true });*/
-            Sound.playNote(Sound.PIANO, 700, 250);
-
-        }
-    }
+//    public static void doLocalization(){
+//        double[] pos = new double[3];
+//        double angle1, angle2, deltAngle;
+//        //clear the screen (removed)
+//        //textLCD.clear(); 
+//        //draw usData
+//        System.out.println(getData());
+//        
+//        if(localType==LocalizationType.FALLING_EDGE){ //this means we have to rotate until wall is seen
+//            while(getData()<DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set speed to the rotation speed
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn clockwise
+//                navigation.forwardLeft();
+//                navigation.backwardRight();
+//            }
+//            //stop the robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            
+//            try{Thread.sleep(500);} catch(InterruptedException e){} //rotate until wall is seen, note the angle
+//            
+//            while(getData()==DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set speed to rotation speed
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                //turn clockwise
+//                navigation.forwardLeft();
+//                navigation.backwardRight();
+//            }
+//            //stop robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            //make sound to signal change
+//            Sound.playNote(Sound.PIANO, 700, 250);
+//            
+//            angle1 = odometer.getThetaInDegrees();
+//            //draw the angle
+//            System.out.println("Angle1 is: "+angle1);
+//            //draw usData
+//            System.out.println(getData());
+//            while(getData() < DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set rotation speed to negative
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn counterclockwise
+//                navigation.backwardLeft();
+//                navigation.forwardRight();
+//            }
+//            //stop robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            //rotate until wall is seen, note angle 
+//            while(getData() == DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set rotation speed to negative
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn counterclockwise
+//                navigation.backwardLeft();
+//                navigation.forwardRight();
+//            }
+//            //stop robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            //make sound to signal change
+//            Sound.playNote(Sound.PIANO, 700, 250);
+//            
+//            angle2 = odometer.getThetaInDegrees();
+//            //draw angle
+//            System.out.println("Angle2 is: "+angle2);
+//            //draw usData
+//            System.out.println(getData());
+//            
+//            if(Math.abs(angle1)<Math.abs(angle2)){                                          
+//                //since angle1 is clockwise from angle2, average of angles right of angle2 is 45 deg
+//                deltAngle = LARGE_ANGLE-((angle1+Math.abs(angle2))/2);
+//                try {Thread.sleep(500);}
+//                catch(InterruptedException e){}
+//                navigation.turnTo(ORIGIN-180);
+//                odometer.setTheta(0);
+//            }
+//            else{
+//                deltAngle = SMALL_ANGLE+((angle1+Math.abs(angle2))/2);
+//                try {Thread.sleep(500);}
+//                catch(InterruptedException e){}
+//                navigation.turnTo(ORIGIN-90);
+//                odometer.setTheta(0);
+//            }
+//            //update position --> odometer.gettheta+deltAngle
+//            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
+//                    new boolean[] { true, true, true });*/
+//            
+//            
+//        }
+//        
+//        else{ //RISING_EDGE
+//            while (getData() == DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set RotationSpeed
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn clockwise
+//                navigation.forwardLeft();
+//                navigation.backwardRight();
+//            }
+//            //keep rotating until the robot sees no wall, then latch the angle
+//            while (getData() < DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set RotationSpeed
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn clockwise
+//                navigation.forwardLeft();
+//                navigation.backwardRight();
+//            }
+//            try {Thread.sleep(500);}catch (InterruptedException e) {}
+//            //stop robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            //make sound to signal change
+//            Sound.playNote(Sound.PIANO, 700, 250);
+//            
+//            angle1=odometer.getThetaInDegrees();
+//            //draw angle
+//            System.out.println("Angle1 is: "+angle1);
+//            //draw usData
+//            System.out.println(getData());
+//            
+//            // switch direction and wait until it sees a wall
+//            while (getData() == DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set RotationSpeed to negative
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn counterclockwise
+//                navigation.backwardLeft();
+//                navigation.forwardRight();
+//            }
+//            
+//            // rotate until no wall is seen, note angle
+//            while (getData() < DISTANCE_CAP){
+//                //draw usData
+//                System.out.println(getData());
+//                //set rotation speed to negative
+//                navigation.setSpeed((float) ROTATION_SPEED);
+//                // turn counterclockwise
+//                navigation.backwardLeft();
+//                navigation.forwardRight();
+//            }
+//            //stop robot
+//            leftMotor.stop();
+//            rightMotor.stop();
+//            
+//            //make sound to signal change
+//            Sound.playNote(Sound.PIANO, 700, 250);
+//            
+//            angle2=odometer.getThetaInDegrees();
+//            //draw angle
+//            System.out.println("Angle2 is: "+angle2);
+//            //draw usData
+//            System.out.println(getData());
+//
+//            if(Math.abs(angle1)<Math.abs(angle2)){
+//                deltAngle = LARGE_ANGLE - ((angle1+Math.abs(angle2))/2);
+//                try {Thread.sleep(500);} 
+//                catch (InterruptedException e) {}
+//                navigation.turnTo(ORIGIN+10);
+//                odometer.setTheta(0);
+//            } else if(Math.abs(angle1)>Math.abs(angle2)) {
+//                deltAngle = SMALL_ANGLE + ((angle1+Math.abs(angle2))/2);
+//                try {Thread.sleep(500);} 
+//                catch (InterruptedException e) {}
+//                navigation.turnTo(-ORIGIN-90);
+//                odometer.setTheta(0);
+//            }
+//            //update position --> odometer.gettheta+deltAngle
+//            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
+//                    new boolean[] { true, true, true });*/
+//            Sound.playNote(Sound.PIANO, 700, 250);
+//
+//        }
+//    }
     
     /**
      * 

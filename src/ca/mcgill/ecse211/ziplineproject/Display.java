@@ -16,6 +16,11 @@ public class Display implements Runnable {
     private Odometer odometer = Main.odometer;
     private static TextLCD textLCD = Main.textLCD;
     public Thread runner;
+    
+    /**
+     * Controls whether to print odometry and battery information to Console (and on the robot screen)
+     */
+    public boolean printToConsole = Main.printToConsole;
 
     /**
      * Display constructor
@@ -68,12 +73,13 @@ public class Display implements Runnable {
                     // by another thread
                 }
             }
-            // Uncomment to print x,y,theta to console
-            System.out.println(formattedDoubleToString(position[0], 2) + "," 
+            
+            if(printToConsole) {
+                System.out.println(formattedDoubleToString(position[0], 2) + "," 
                              + formattedDoubleToString(position[1], 2) + "," 
                              + formattedDoubleToString(position[2]*180/Math.PI, 2) + ","
                              + formattedDoubleToString(LocalEV3.get().getPower().getVoltageMilliVolt(), 2)
-            );
+            );}
         } // end while(true)
     }
 
@@ -161,7 +167,7 @@ public class Display implements Runnable {
     }
     
     /**
-     * Helper method to draw the x0 and y0 selection UI on the LCD
+     * Helper method to draw the <i>x<sub>0</sub></i> and <i>y<sub>0</sub></i> selection UI on the LCD
      */
     public static void drawSetXYUI() {
         int x0 = Main.x0, y0 = Main.y0;
