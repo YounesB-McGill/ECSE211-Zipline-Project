@@ -177,84 +177,10 @@ public class Navigation extends Thread{
          
          
          isTraveling = false;
-         
-         // Chaoyi's old logic
-         /*x = x * TILE;
-         y = y * TILE;
-         getPosition(odometer);
-         // calculate the angle we need to turn to
-         double theta1 = Math.atan((y - nowY) / (x - nowX)) * 360.0 / (2 * Math.PI);
-         if (x - nowX < 0) {
-             theta1 = 180.0 + theta1;
-         }
-         // turn to the proper angle
-         turnTo(theta1);
-         // drive forward
-         leftMotor.setSpeed(speed);
-         rightMotor.setSpeed(speed);
-         forward();
-         // keep calling turnTo and checking the distance
-         while (true) {
-             getPosition(odometer);
-             // if we've reached our destination, break the loop
-             if (Math.abs(y - nowY) < 0.8 && Math.abs(x - nowX) < 0.8)
-                 break;
-         }*/
-         
+                        
     } // end travelTo()
     
-    /*public void moveTo(double x, double y) {
-        isTraveling = true;
-        x = x * TILE;
-        y = y * TILE;
-        while (isTraveling) { 
-            // getting the current position of robot
-            double currX = odometer.getX();
-            double currY = odometer.getY();
-            // getting the theta of the destination, converting to degrees
-            double destTheta = Math.atan2((x - currX), (y - currY)) * 180 / Math.PI;
-            // getting distance needed to travel
-            double deltaX = (x - currX);
-            double deltaY = (y - currY);
-            double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-            
-            // Rotate to point towards destination theta
-            turnTo(destTheta);
-            
-            try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
-            
-            forward(distance);
-
-            isTraveling = false;
-        }
-    }
-    
-    public void moveToTrue(double x, double y) {
-        isTraveling = true;
-        x = x * TILE;
-        y = y * TILE;
-        while (isTraveling) { 
-            // getting the current position of robot
-            double currX = odometer.getX();
-            double currY = odometer.getY();
-            // getting the theta of the destination, converting to degrees
-            double destTheta = Math.atan2((x - currX), (y - currY)) * 180 / Math.PI;
-            // getting distance needed to travel
-            double distance = Math.sqrt((x - currX) * (x - currX) + (y - currY) * (y - currY));
-            double deltaX = (x - currX);
-            double deltaY = (y - currY);
-            // Rotate to point towards destination theta
-            turnTo(destTheta);
-            
-            try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
-            
-            forwardTrue(distance);
-
-            isTraveling = false;
-        }
-    }*/
-
-    
+   
     /* (Template for a JavaDoc w picture)
      * Turn to specified angle
      * 
@@ -329,26 +255,6 @@ public class Navigation extends Thread{
 
         isTurning = false;
         
-        // Chaoyi's old logic
-        /*isTurning = true;
-        // convert to polar coordinate
-        nowTheta = (360.0 - nowTheta) + 90.0;
-        if (nowTheta > 360.0)
-            nowTheta = nowTheta - 360.0;
-        // calculate the angle we need to turn
-        double turningTheta = theta - nowTheta;
-        // make sure it is the minimal angle
-        if (turningTheta > 180)
-            turningTheta = turningTheta - 360.0;
-        else if (turningTheta < -180)
-            turningTheta = turningTheta + 360.0;
-
-        // make a turn
-        leftMotor.setSpeed(ROTATE_SPEED);
-        rightMotor.setSpeed(ROTATE_SPEED);
-        leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, turningTheta), true);
-        rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, turningTheta), false);
-        isTurning = false;*/
     }
 
     /**

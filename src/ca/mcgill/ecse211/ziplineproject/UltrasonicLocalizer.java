@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.ziplineproject;
 
-
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -9,30 +8,31 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 public class UltrasonicLocalizer extends Thread implements UltrasonicController {
 
 	// variables only set once
-	
+	private static final int FORWARD_SPEED = Main.FWD_SPEED;
 	private final int rotateSpeed = Main.ROTATE_SPEED;
 	private static final int ACCE_SPEED = 100;
 	public double fp;
 	public static final double ROTATION_SPEED = Main.ROTATE_SPEED;
 	private final int wallDistance = 25;
 	private final int k = 3;
-	private double wheelRadius=Main.WHEEL_RADIUS;
-	private double width=Main.TRACK;
-	
+	private double wheelRadius = Main.WHEEL_RADIUS;
+	private double width = Main.TRACK;
 
 	private static final Odometer odometer = Main.odometer;
 	private static final Navigation navigation = Main.navigation;
 
 	public static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
 	public static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
-	private static EV3LargeRegulatedMotor traverseMotor=Main.traverseMotor;
+	private static EV3LargeRegulatedMotor traverseMotor = Main.traverseMotor;
 
 	private static LocalizationType localType;
-	public static enum LocalizationType { RISING_EDGE, FALLING_EDGE };
+
+	public static enum LocalizationType {
+		RISING_EDGE, FALLING_EDGE
+	};
 
 	private static int count;
-	private static float[] usData = new float[] {0};
-	
+	private static float[] usData = new float[] { 0 };
 
 	private int i = 0;
 
@@ -43,40 +43,39 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 
 	private static int type;
 
-	public UltrasonicLocalizer(int type){
-		this.type=type;
+	public UltrasonicLocalizer(int type) {
+		this.type = type;
 	}
 
-	public void run(){
-		if(type==0)
+	public void run() {
+		if (type == 0)
 			fallingEdge();
-		if(type==1)
+		if (type == 1)
 			doLastLocalization();
 	}
-	public static void doLastLocalization(){
-		int i=0;
-		 while(distance>10 || i<10){
-			if(distance<=10){
+
+	public static void doLastLocalization() {
+		driveForward();
+		int i = 0;
+		while (i < 10) {
+			if (distance <= 30) {
 				i++;
 			}
-		 } 
-		 LightLocalizer ll=new LightLocalizer(2);
-		 while(true){
-			 if (ll.hitGridLine()) {			
-					Sound.beep();
-					break;
-				}
-		 }
-		 //stop the robot
-	         leftMotor.stop();
-	         rightMotor.stop();
-	         traverseMotor.stop();
-	         Sound.beep();
-	         Sound.beep();
-	         Sound.beep();
-	         ll.run();
-		 
+		}
+
+		// stop the robot
+		leftMotor.stop();
+		rightMotor.stop();
+		traverseMotor.stop();
+		LightLocalizer ll = new LightLocalizer(2);
+		Sound.beep();
+		Sound.beep();
+		Sound.beep();
+		ll.run();
+		navigation.travelTo(Main.xd, Main.yd);
+
 	}
+
 	private void fallingEdge() {
 		// ADD METHOD FOR FALLING EDGE
 
@@ -115,8 +114,8 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 			counterclockwise();
 		}
 		Sound.beep();
-		counterclockwise();	
-		
+		counterclockwise();
+
 		// detecting second falling point
 		double fallingPoint2;
 		while (true) {
@@ -153,7 +152,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		if (fallingPoint1 > fallingPoint2) { // start from facing the wall
 			fallingPoint1 = fallingPoint1 - 360;
 			averageAngle = (fallingPoint1 + fallingPoint2) / 2;
-			turningAngle = 30- averageAngle + odometer.getTheta() * 180 / Math.PI;
+			turningAngle = 30 - averageAngle + odometer.getTheta() * 180 / Math.PI;
 		} else { // start not facing the wall
 			averageAngle = (fallingPoint1 + fallingPoint2) / 2;
 			turningAngle = 30 - averageAngle + odometer.getTheta() * 180 / Math.PI;
@@ -162,7 +161,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		Sound.beep();
 		// make turn clockwise
 
-		clockwise(turningAngle,false);
+		clockwise(turningAngle, false);
 
 		odometer.setTheta(0);
 
@@ -196,11 +195,11 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 
 		// to test TRACK value
 	}
-	
+
 	/**
-	 * Make robot rotate clockwise for a certain angle
-	 * The second argument controls whether the next instruction(s)
-	 * should be executed when this rotation hasn't ended.
+	 * Make robot rotate clockwise for a certain angle The second argument
+	 * controls whether the next instruction(s) should be executed when this
+	 * rotation hasn't ended.
 	 */
 	private void clockwise(double theta, boolean con) {
 		setRotateSpeed();
@@ -214,7 +213,6 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		}
 
 	}
-
 
 	/**
 	 * Make robot rotate clockwise
@@ -249,6 +247,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		leftMotor.waitComplete();
 		rightMotor.waitComplete();
 	}
+
 	private void setRotateSpeed() {
 		leftMotor.setSpeed(rotateSpeed);
 		rightMotor.setSpeed(rotateSpeed);
@@ -260,6 +259,25 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	}
+
+	/**
+	 * Make both motors go forward
+	 */
+	private static void driveForward() {
+		setForwardSpeed();
+		leftMotor.startSynchronization();
+		leftMotor.forward();
+		rightMotor.forward();
+		leftMotor.endSynchronization();
+	}
+
+	/**
+	 * Set forward speed of the motors
+	 */
+	private static void setForwardSpeed() {
+		leftMotor.setSpeed(FORWARD_SPEED);
+		rightMotor.setSpeed(FORWARD_SPEED);
 	}
 
 	@Override

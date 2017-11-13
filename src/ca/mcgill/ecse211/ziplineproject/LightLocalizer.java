@@ -63,7 +63,7 @@ public final class LightLocalizer extends Thread {
 			doLightLocalizationNew(1, 1);
 		}
 		if(type==1) doLightLocalizationNew(Main.x0, Main.y0);
-		if(type==2) doLightLocalizationNew(Main.xc, Main.yc+5);
+		if(type==2) doLightLocalizationNew(Main.xd, Main.yd);
 	}
 
 	
@@ -92,23 +92,6 @@ public final class LightLocalizer extends Thread {
 
 	}
 
-	/**
-	 * do test things, ignore it 
-	 *//*
-	public void dotest() {
-		//clockwise(90, false);
-		// counterclockwise(90,false);
-		// driveForward(30.98,false);
-		// driveBackABit();
-		//navigation.turnLeftBy(90);
-	    //navigation.turnTo(180);
-		int button = 0;
-
-		while (button == 0)
-			button = Button.waitForAnyPress();
-		dotest();
-	}
-	*/
 	
 /**
 	 *   This is the new LightLocalization method, which fits for localizing at any point 
@@ -257,14 +240,6 @@ public final class LightLocalizer extends Thread {
 			}
 		}
 		
-		
-
-		//driveForward(40,false);
-		/*// Wait for button press
-		int button = 0;
-		while (button == 0)
-			button = Button.waitForAnyPress();
-		doLightLocalizationNew(3, 2);*/
 
 	}
 

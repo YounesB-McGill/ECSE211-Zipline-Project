@@ -19,7 +19,7 @@ public class TraverseZipline extends Thread  {
 	private int xc;
 	private int yc;
 
-	private static final int FORWARD_SPEED = 50;
+	private static final int FORWARD_SPEED = 120;
 	private static final int TRAVERSE_SPEED = Main.TRAVERSE_SPEED;
 	private static final int ROTATE_SPEED = Main.ROTATE_SPEED;
 	private static final int SLOWDOWN_SPEED = 30;
@@ -42,92 +42,33 @@ public class TraverseZipline extends Thread  {
 	}
 
 	public void run() {
-
-		//navigation.turnTo(90);
-		//navigation.forward(2);
 		
-		stopMotor();		
-		
-	    navigation.turnTo(0);
-	    driveBackABit();
+		stopMotor();				
+	    //navigation.turnTo(0);
+	    //driveBackABit();
 	    // traverse motor starts to rotate
 		traverseMotor.setSpeed(TRAVERSE_SPEED);
 		traverseMotor.forward();
 		
 		navigation.travelTo(xc,yc);
-		clockwise(3,false);
+		//clockwise(3,false);
 					
 		setSpeed(FORWARD_SPEED);
-		forward();
-		
-		
-		Timer timer = new Timer(true);  
-		long delay=35*1000; //35 sec
-		TimerTask task=new TimerTask(){
-		        public void run() {
-		        	/*UltrasonicLocalizer ul= new UltrasonicLocalizer(1);
-		    		ul.run();*/
-		        	/*setSpeed(SLOWDOWN_SPEED);
-		    		forward();
-		    		LightLocalizer ll=new LightLocalizer(2);
-		    		int i=0;
-		    		 while(true){
-		    			 if (ll.hitGridLine()) {			
-		    					Sound.beep();
-		    					i++;
-		    				}
-		    			 if(i>2){
-		    				 break;
-		    			 }
-		    		 }
-		    		 //stop the robot
-		    	         leftMotor.stop();
-		    	         rightMotor.stop();
-		    	         traverseMotor.stop();
-		    	         Sound.beep();
-		    	         Sound.beep();
-		    	         Sound.beep();
-		    	         ll.run();*/
-		        	 leftMotor.stop();
-	    	         rightMotor.stop();
-		        	
-		        }
-		    };
-		
-	 	timer.schedule(task,delay);
-	 
-		
-		/*
-		UltrasonicLocalizer ul= new UltrasonicLocalizer(1);
-		ul.run();*/
-		
-		
-
-		// because motors runs at the same speed, I wonder whether we can get distances traveled by odometer.
-		// If not, we have to change a lot in the odometer class
-		/*while (odometer.getX() < 5) {
-			;// do nothing
-		}
-
-		// slow down
-		setSpeed(SLOWDOWN_SPEED);
-		forward();
-		traverseMotor.setSpeed(SLOWDOWN_SPEED);
-		traverseMotor.forward();
-		
-		while (odometer.getX() < 7) {
-			;// do nothing
-		}
-		
-		//stop
-		leftMotor.stop(true);
-		rightMotor.stop(true);
-		traverseMotor.stop(true);*/
-		
-		
+		driveForward();
 
 	}
 	
+	/**
+	 * Make both motors go forward
+	 */
+	private void driveForward() {
+		setForwardSpeed();
+		leftMotor.startSynchronization();
+		leftMotor.forward();
+		rightMotor.forward();
+		leftMotor.endSynchronization();
+	}
+
 	/**
 	 * Set forward speed of the motors
 	 */
