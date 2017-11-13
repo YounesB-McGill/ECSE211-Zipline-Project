@@ -38,28 +38,31 @@ public class TestLightLocalizer {
         display.start();
        
         
-        // Set odometer to start at (1,1)
+            
+  /*   // Set odometer to start at (1,1)
         odometer.setX(1*TILE); odometer.setY(1*TILE);
         
         //navigation.travelTo(1, 3);
         //navigation.travelTo(3, 2);
-        
-        LightLocalizer lo=new LightLocalizer(0);
+     LightLocalizer lo=new LightLocalizer(0);
         //lo.dotest();
         lo.start();
         dispose(lo);
         
-        Navigation na=new Navigation();
+        Navigation na=new Navigation(1,6);
         na.start();
         dispose(na);
         
         LightLocalizer lo1=new LightLocalizer(1);
         lo1.start();
         dispose(lo1);
+        */
         
-        TraverseZipline tz= new TraverseZipline(2,2);
+        odometer.setX(1*TILE); odometer.setY(6*TILE);
+        TraverseZipline tz= new TraverseZipline(2,6);
         tz.start();
         dispose(tz);
+        
       
         // TODO Assert result
     }
