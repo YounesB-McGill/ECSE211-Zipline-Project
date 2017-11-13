@@ -48,8 +48,8 @@ public class Navigation extends Thread{
     public static int xBefore;
     public static int yBefore;
     
-    public int x0;
-    public int y0;
+    public int x;
+    public int y;
     public int type;
     
     double[] position = new double[3];
@@ -66,8 +66,8 @@ public class Navigation extends Thread{
     
     public Navigation(int x, int y,int type){
         lock = new Object();
-        this.x0=x;
-        this.y0=y;
+        this.x=x;
+        this.y=y;
         this.type=type;
         leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
     }
@@ -84,18 +84,18 @@ public class Navigation extends Thread{
     	if(type==0){
     		//localization ends, navigation starts
             if(startCorner == 0 || startCorner == 3) { // SW, NW
-            	travelTo(x0,y0); // This will take us to (x0, y0)
+            	travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
             } else if(startCorner == 1) { // SE|
                 travelTo(1, 1); //avoid entering zip line area
-                travelTo(x0,y0); // This will take us to (x0, y0)
+                travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
             } else { // NE
                 travelTo(1, 7); //avoid entering zip line area
-                travelTo(x0,y0); // This will take us to (x0, y0)
+                travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
             }
     	   
     	}
     	else{
-    		travelTo(x0,y0);
+    		travelTo(x,y);
     	}
     	   
     }

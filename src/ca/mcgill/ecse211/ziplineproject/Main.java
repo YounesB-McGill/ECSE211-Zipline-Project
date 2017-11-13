@@ -83,10 +83,14 @@ public class Main {
 	public static int xc = 0;
 	/** The <i>y</i> coordinate of the zipline. */
 	public static int yc = 0;
-	/** The <i>x</i> coordinate of the opponent flag. */
+	/** The <i>x</i> coordinate of the point near the end of zipline. */
 	public static int xd = 0;
-	/** The <i>y</i> coordinate of the opponent flag. */
+	/** The <i>y</i> coordinate of the point near the end of zipline. */
 	public static int yd = 0;
+	/** The <i>x</i> coordinate of the opponent flag. */
+	public static int xf = 0;
+	/** The <i>y</i> coordinate of the opponent flag. */
+	public static int yf = 0;
 
 	/** The start corner for the competition. */
 	public static int startCorner;
@@ -172,13 +176,26 @@ public class Main {
 		setTeamColor();
 
 		// setting manually
-		startCorner = 3;    //input 0, 1, 2, or 3
-		x0 = 1;             //the point near the start point of zip line        
+		startCorner = 1;    //input 0, 1, 2, or 3
+	/*	x0 = 1;             //the point near the start point of zip line        
 		y0 = 6;
 		xc = 2;             //start point of zip line
 		yc = 6;
 		xd = 7;             //the point near the end point of zip line
 		yd = 6;
+		xf = 7;             //location of the opponent flag
+		yf = 1;*/
+		
+		x0 = 1;             //the point near the start point of zip line        
+		y0 = 7;
+		xc = 2;             //start point of zip line
+		yc = 6;
+		xd = 6;             //the point near the end point of zip line
+		yd = 2;
+		xf = 7;             //location of the opponent flag
+		yf = 1;
+		
+		
 		// startCorner = Display.getStartCornerUI();
 		// TestOdometer.testOdometer();
 		// TestNavigation.testNavigation();
@@ -228,18 +245,17 @@ public class Main {
 		dispose(tz);
 
 		Timer timer = new Timer(true);
-		long delay = 28 * 1000; // 28 sec
+		long delay = 28 * 1000; // traverse for 28 sec
 		TimerTask task = new TimerTask() {
 			public void run() {
 				// stop the robot
 				leftMotor.stop();
 				rightMotor.stop();
-				traverseMotor.stop();
+				//traverseMotor.stop();
 				Sound.beepSequenceUp();
 				Sound.beepSequenceUp();
-				UltrasonicLocalizer ul1 = new UltrasonicLocalizer(1);
-				ul1.run();
-
+				LightLocalizer lo2 = new LightLocalizer(2);
+				lo2.run();		
 			}
 		};
 		timer.schedule(task, delay);

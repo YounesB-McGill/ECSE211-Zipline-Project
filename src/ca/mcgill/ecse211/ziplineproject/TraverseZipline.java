@@ -52,8 +52,7 @@ public class TraverseZipline extends Thread  {
 		
 		navigation.travelTo(xc,yc);
 		//clockwise(3,false);
-					
-		setSpeed(FORWARD_SPEED);
+							
 		driveForward();
 
 	}
@@ -62,6 +61,7 @@ public class TraverseZipline extends Thread  {
 	 * Make both motors go forward
 	 */
 	private void driveForward() {
+		stopMotor();
 		setForwardSpeed();
 		leftMotor.startSynchronization();
 		leftMotor.forward();
@@ -149,10 +149,6 @@ public class TraverseZipline extends Thread  {
 		rightMotor.waitComplete();
 	}
 
-	public void setSpeed(float speed) {
-		setLeftSpeed(speed);
-		setRightSpeed(speed);
-	}
 
 	public void setLeftSpeed(float speed) {
 		leftMotor.setSpeed(speed);

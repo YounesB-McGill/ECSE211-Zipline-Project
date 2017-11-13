@@ -48,13 +48,12 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	}
 
 	public void run() {
-		if (type == 0)
+		//if (type == 0)
 			fallingEdge();
-		if (type == 1)
-			doLastLocalization();
+		
 	}
 
-	public static void doLastLocalization() {
+	/*public static void doLastLocalization() {
 		driveForward();
 		int i = 0;
 		while (i < 10) {
@@ -72,9 +71,9 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		Sound.beep();
 		Sound.beep();
 		ll.run();
-		navigation.travelTo(Main.xd, Main.yd);
+		//navigation.travelTo(Main.xd, Main.yd);
 
-	}
+	}*/
 
 	private void fallingEdge() {
 		// ADD METHOD FOR FALLING EDGE
@@ -140,10 +139,6 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 		// stop the motor to do calculation
 		stopMotor();
 
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-		}
 
 		double averageAngle;
 		double turningAngle;
@@ -165,10 +160,6 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 
 		odometer.setTheta(0);
 
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-		}
 
 	}
 
@@ -239,7 +230,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	/**
 	 * Make robot stop
 	 */
-	private void stopMotor() {
+	private static void stopMotor() {
 		leftMotor.startSynchronization();
 		leftMotor.stop();
 		rightMotor.stop();
@@ -265,6 +256,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	 * Make both motors go forward
 	 */
 	private static void driveForward() {
+		stopMotor();
 		setForwardSpeed();
 		leftMotor.startSynchronization();
 		leftMotor.forward();

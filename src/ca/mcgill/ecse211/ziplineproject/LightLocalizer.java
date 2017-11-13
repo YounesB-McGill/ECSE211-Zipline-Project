@@ -31,6 +31,7 @@ public final class LightLocalizer extends Thread {
 
 	private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
 	private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
+	private EV3LargeRegulatedMotor traverseMotor=Main.traverseMotor;
 	private EV3ColorSensor colorSensor = Main.cSensor;
 
 	private Odometer odometer = Main.odometer;
@@ -61,9 +62,37 @@ public final class LightLocalizer extends Thread {
 		if(type==0)	{
 			doLightLocalizationBegin();
 			doLightLocalizationNew(1, 1);
+			stopMotor();
+			navigation.turnTo(0);
+		    resetAccordingToCorner();
+		    stopMotor();
 		}
-		if(type==1) doLightLocalizationNew(Main.x0, Main.y0);
-		if(type==2) doLightLocalizationNew(Main.xd, Main.yd);
+		else if(type==1){
+			doLightLocalizationNew(Main.x0, Main.y0);
+		}
+		else if(type==2){
+			driveForward();
+			while(true){
+			if (hitGridLine()) {
+				Sound.beep();
+				break;
+			}
+			}
+			
+			// stop the motors
+			stopMotor();
+			traverseMotor.stop();
+			doLightLocalizationNew(Main.xd, Main.yd);
+			odometer.setX(Main.xd*TILE);
+    		odometer.setY(Main.yd*TILE);
+			Sound.beepSequence();
+			Sound.beepSequence();
+			navigation.travelTo(Main.xf, Main.yf);
+			Sound.beepSequenceUp();
+			Sound.beepSequenceUp();
+			stopMotor();
+			doLightLocalizationNew(Main.xf, Main.yf);
+		}
 	}
 
 	
@@ -202,18 +231,16 @@ public final class LightLocalizer extends Thread {
 		Sound.beepSequenceUp();
 		
 		
-        if(type==2){
-        	odometer.setX(X*TILE);
-    		odometer.setY(Y*TILE);
-		}
-        else{
+        
+        	
+	
 		//find the actual location x,y
 		double currentX=findClosestCoordinate(odometer.getX(),X*TILE);
 		double currentY=findClosestCoordinate(odometer.getY(),Y*TILE);		
 		// set odometer
 		odometer.setX(currentX);
 		odometer.setY(currentY);
-        }
+        
 
 		// turn 360 degrees
 		clockwise(360, true);
@@ -231,18 +258,10 @@ public final class LightLocalizer extends Thread {
 		int calibration = setToClosestTheta(currentTheta);
 		odometer.setTheta(calibration * Math.PI / 180);
 	
-		if(type==0){
-			navigation.turnTo(0);
-		    resetAccordingToCorner();
-		    try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-			}
-		}
-		
-
 	}
 
+	
+	
 	/**
 	 * On a panel, find the closest crossing point's coordinate value 
 	 * according to current value.
