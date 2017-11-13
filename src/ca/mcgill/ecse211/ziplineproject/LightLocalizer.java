@@ -20,8 +20,8 @@ public final class LightLocalizer extends Thread {
 
 	private static double WHEEL_RADIUS = Main.WHEEL_RADIUS;
 	private static double TRACK = Main.TRACK;
-	private static final int FORWARD_SPEED = 120;
-	private static final int ROTATE_SPEED = 80;
+	private static final int FORWARD_SPEED = Main.FWD_SPEED;
+	private static final int ROTATE_SPEED = Main.ROTATE_SPEED;
 	private static final int ACCE_SPEED = 150;
 	private static final int forDis = 15;
 	private static final double sensorDis = -11; // -4
@@ -62,7 +62,8 @@ public final class LightLocalizer extends Thread {
 			doLightLocalizationBegin();
 			doLightLocalizationNew(1, 1);
 		}
-		if(type==1) doLightLocalizationNew(2, 1);
+		if(type==1) doLightLocalizationNew(Main.x0, Main.y0);
+		if(type==2) doLightLocalizationNew(Main.xc, Main.yc+5);
 	}
 
 	
@@ -89,58 +90,6 @@ public final class LightLocalizer extends Thread {
 		// drive backward a small distance
 		driveBackABit();
 
-	/*	// do a 360 degree clockwise turn, record 4 heading degrees
-		setRotateSpeed();
-		clockwise();
-		double[] heading = new double[4];
-		int i = 0;
-		while (i < 4) {
-			if (hitGridLine()) {
-				Sound.beep();
-				heading[i] = odometer.getTheta();
-				i++;
-			}
-		}
-		// heading[3]: vertical line lower point
-		// heading[0]: horizontal line left point
-		// heading[2]: horizontal line right point
-		// heading[1]: vertival line upper point
-		double thetaY = Math.abs(heading[1] - heading[3]);
-		double x = sensorDis * Math.cos(Math.PI * thetaY / (2 * 180)) + X;
-
-		double thetaX = heading[2] + 360 - heading[0];
-		double y = -sensorDis * Math.cos(Math.PI * thetaX / (2 * 180)) + Y;
-
-		odometer.setX(x);
-		odometer.setY(y);
-
-		Sound.beep();
-
-		navigation.travelTo(X, Y);
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-		}
-		navigation.turnTo(navigation.transferAngle(0));
-
-		// correction
-		setRotateSpeed();
-		leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, 5.0), true);
-		rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, 5.0), false);
-
-		odometer.setTheta(0);
-		resetAccordingToCorner();
-
-		leftMotor.startSynchronization();
-		leftMotor.stop(true);
-		rightMotor.stop(true);
-		leftMotor.endSynchronization();
-
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-		}
-*/
 	}
 
 	/**
@@ -208,7 +157,7 @@ public final class LightLocalizer extends Thread {
 			} else if (i == 2) {
 				// the robot locates on a line 
 				//so we follow the line to find a point 
-				navigation.turnTo(heading[1]);
+				navigation.turnTo(heading[0]);
 				driveForward(12, false);
 			} else if (i == 3){
 				double[] angle = new double[3];
@@ -217,7 +166,7 @@ public final class LightLocalizer extends Thread {
 				double directionAngle = findNewDirection(heading, angle, MinAng);
 				//here turnTo method go to the reverse direction, so I just drive backwards
 				navigation.turnTo(directionAngle);
-				driveForward(-10, false);
+				driveForward(-5, false);
 			}
 			
 			//recursively call doLightLocalization
@@ -269,13 +218,19 @@ public final class LightLocalizer extends Thread {
 		stopMotor();
 		Sound.beepSequenceUp();
 		
+		
+        if(type==2){
+        	odometer.setX(X*TILE);
+    		odometer.setY(Y*TILE);
+		}
+        else{
 		//find the actual location x,y
 		double currentX=findClosestCoordinate(odometer.getX(),X*TILE);
-		double currentY=findClosestCoordinate(odometer.getY(),Y*TILE);
-		
+		double currentY=findClosestCoordinate(odometer.getY(),Y*TILE);		
 		// set odometer
 		odometer.setX(currentX);
 		odometer.setY(currentY);
+        }
 
 		// turn 360 degrees
 		clockwise(360, true);
@@ -292,6 +247,17 @@ public final class LightLocalizer extends Thread {
 		double currentTheta = odometer.getTheta() * 180 / Math.PI;
 		int calibration = setToClosestTheta(currentTheta);
 		odometer.setTheta(calibration * Math.PI / 180);
+	
+		if(type==0){
+			navigation.turnTo(0);
+		    resetAccordingToCorner();
+		    try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		
 
 		//driveForward(40,false);
 		/*// Wait for button press
@@ -360,9 +326,9 @@ public final class LightLocalizer extends Thread {
 	 */
 	private double findNewDirection(double[] heading, double[] Angle, double MinAng) {
 		double direction = 0;
-		for (int i = 0; i < heading.length; i++) {
+		for (int i = 0; i < Angle.length; i++) {
 			if (Angle[i] == MinAng) {
-				if (i !=  heading.length-1) {
+				if (i !=  Angle.length-1) {
 					direction = calAveAng(heading[i], heading[i + 1]);
 				} else {
 					direction = calAveAng(heading[i], heading[0]);
@@ -400,8 +366,8 @@ public final class LightLocalizer extends Thread {
 	 * @return
 	 */
 	private double[] getAngles(double[] heading, double[] Angle) {
-		for (int i = 0; i < heading.length; i++) {
-			if (i != heading.length-1) {
+		for (int i = 0; i < Angle.length; i++) {
+			if (i != Angle.length-1) {
 				Angle[i] = calAng(heading[i], heading[i + 1]);
 			} else {
 				Angle[i] = calAng(heading[i], heading[0]);
@@ -521,7 +487,7 @@ public final class LightLocalizer extends Thread {
 	/**
 	 * Returns true if a grid line is crossed
 	 */
-	private boolean hitGridLine() {
+	boolean hitGridLine() {
 		lightIntensity.fetchSample(csData, 0);
 		intensity = csData[0];
 		return intensity < 0.3;

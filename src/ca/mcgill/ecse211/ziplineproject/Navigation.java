@@ -37,7 +37,8 @@ public class Navigation extends Thread{
     
     /**Initialization of the odometer which calculates the position and orientation of the robot*/
     public static Odometer odometer = Main.odometer;
-    
+   
+    private int startCorner = Main.startCorner;
     /**Used to synchronize access to a resource across multiple threads*/public Object lock;
 
     
@@ -47,8 +48,9 @@ public class Navigation extends Thread{
     public static int xBefore;
     public static int yBefore;
     
-    public static int x0;
-    public static int y0;
+    public int x0;
+    public int y0;
+    public int type;
     
     double[] position = new double[3];
     private double nowX;
@@ -62,9 +64,12 @@ public class Navigation extends Thread{
     
     private static long SLEEPINT = 150;
     
-    public Navigation(){
+    public Navigation(int x, int y,int type){
         lock = new Object();
-        //leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
+        this.x0=x;
+        this.y0=y;
+        this.type=type;
+        leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
     }
     
     public void run(){
@@ -76,7 +81,23 @@ public class Navigation extends Thread{
             
             travelTo( points[version-1][i][0], points[version-1][i][1] );
         }*/
-    	travelTo(2,1);
+    	if(type==0){
+    		//localization ends, navigation starts
+            if(startCorner == 0 || startCorner == 3) { // SW, NW
+            	travelTo(x0,y0); // This will take us to (x0, y0)
+            } else if(startCorner == 1) { // SE|
+                travelTo(1, 1); //avoid entering zip line area
+                travelTo(x0,y0); // This will take us to (x0, y0)
+            } else { // NE
+                travelTo(1, 7); //avoid entering zip line area
+                travelTo(x0,y0); // This will take us to (x0, y0)
+            }
+    	   
+    	}
+    	else{
+    		travelTo(x0,y0);
+    	}
+    	   
     }
 
     /**
@@ -104,6 +125,10 @@ public class Navigation extends Thread{
      
      public void travelTo(double x, double y, int speed) {
          isTraveling = true;
+         
+         double xSaver=x;
+         double ySaver=y;
+         
          // Convert to cm
          x = x * TILE;
          y = y * TILE;
@@ -120,6 +145,24 @@ public class Navigation extends Thread{
          
          // getting distance needed to travel
          double distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+         
+         if(distance>3*TILE+20){
+        	 // turn to destination theta
+             setSpeed(0);
+             turnTo(destTheta);
+             
+             try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
+             
+             setSpeed(0);
+             setSpeed(speed);
+             forward(2*TILE);
+                     	
+        	 LightLocalizer lo=new LightLocalizer(1);
+        	 lo.run();
+        	
+        	 travelTo(xSaver,ySaver,speed);
+        	 return;
+         }
          
          // turn to destination theta
          setSpeed(0);
@@ -324,6 +367,7 @@ public class Navigation extends Thread{
     	if(angle == -180){
     		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
             rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, angle), false);
+            return;
     	}
         angle = convertAngleTo180Scale(angle);
         if(angle < 0) {
@@ -465,6 +509,16 @@ public class Navigation extends Thread{
         backwardLeft();
         backwardRight();
     }
+    
+    /**
+     * Go backward for a specified distance
+     * @param distance Desired distance in cm.
+     */
+    public static void backward(double distance){
+        leftMotor.rotate(-convertDistance(WHEEL_RADIUS, distance), true);
+        rightMotor.rotate(-convertDistance(WHEEL_RADIUS, distance), false);
+    }
+    
     
     /**
      * Go forward for a specified distance

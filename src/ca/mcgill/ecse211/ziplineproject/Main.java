@@ -1,6 +1,8 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 
+
+
 import ca.mcgill.ecse211.ziplineproject.UltrasonicLocalizer.LocalizationType;
 import lejos.hardware.Button;
 import lejos.hardware.Device;
@@ -48,14 +50,16 @@ public class Main {
     public static final double TRACK = 14.68; // was 14.80, then 15.0, then 15.2. 15.0 was better
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     
-    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 200;
-    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 50;
-    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 250;
+    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 180;
+    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 120;
+    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 300;
     
     /**The <i>x</i> coordinate of the zipline approach.*/public static int x0 = 0;
     /**The <i>y</i> coordinate of the zipline approach.*/public static int y0 = 0;
     /**The <i>x</i> coordinate of the zipline.*/public static int xc = 0;
     /**The <i>y</i> coordinate of the zipline.*/public static int yc = 0;
+    /**The <i>x</i> coordinate of the opponent flag.*/public static int xd = 0;
+    /**The <i>y</i> coordinate of the opponent flag.*/public static int yd = 0;
     
     /**The start corner for the competition.*/
     public static int startCorner;
@@ -87,16 +91,17 @@ public class Main {
      * <b><i><code>EV3UltrasonicSensor</code></i></b>
      */
     public static UARTSensor[] sensors = new UARTSensor[] {
-            new EV3UltrasonicSensor(LocalEV3.get().getPort("S1")),
+            //new EV3UltrasonicSensor(LocalEV3.get().getPort("S1")),
             new EV3ColorSensor(LocalEV3.get().getPort("S4")),
             // TODO Second ColorSensor for flag capture
             // new EV3ColorSensor(LocalEV3.get().getPort("S?"))
     };
     
+    public static final Port usPort = LocalEV3.get().getPort("S1");
     /**Ultrasonic sensor used for localization and obstacle avoidance*/
-    public static final EV3UltrasonicSensor usSensor = (EV3UltrasonicSensor) sensors[0]; 
+    //public static final EV3UltrasonicSensor usSensor = (EV3UltrasonicSensor) sensors[0]; 
     /**Color sensor used to detect gridlines*/
-    public static final EV3ColorSensor cSensor = (EV3ColorSensor) sensors[1];
+    public static final EV3ColorSensor cSensor = (EV3ColorSensor) sensors[0];
     /**Color sensor used to recognize the flag*/
     public static final EV3ColorSensor flagSensor = null; //TODO (EV3ColorSensor) sensors[2];
     
@@ -108,7 +113,7 @@ public class Main {
     /**Displays the user interface and odometry information on the EV3 LCD*/
     public static Display display = new Display();
     /**Navigation object used to navigate across the game environment*/
-    public static Navigation navigation = new Navigation();
+    public static Navigation navigation = new Navigation(x0,y0,2);
     
     /**
      * The possible team colors of the robot, either Red or Green.
@@ -135,8 +140,64 @@ public class Main {
         
         //TestOdometer.testOdometer();
         //TestNavigation.testNavigation();
+        startCorner=1;
+        x0=1;
+        y0=6;
+        xc=2;
+        yc=6;
+        xd=7;
+        yd=5;
         //TestLightLocalizer.testLightLocalizer();
-        TestTraverseZipline.testTraverseZipline();
+        //TestTraverseZipline.testTraverseZipline();
+        
+        int button = 0;
+        textLCD.drawString("Press a button ", 0, 0);
+        textLCD.drawString("to start the ", 0, 1);
+        textLCD.drawString("navigation test", 0, 2);
+        
+        while (button == 0)
+            button = Button.waitForAnyPress();
+        
+        // Clear display
+        textLCD.clear();
+        
+        SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
+        SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from this instance
+        float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer in which data are returned
+        UltrasonicPoller usPoller = null;
+        
+        // Start odometer and display
+        odometer.start();
+        display.start();
+        
+       
+        
+        UltrasonicLocalizer ul= new UltrasonicLocalizer(0); 
+        usPoller = new UltrasonicPoller(usDistance, usData, ul);
+        usPoller.start(); 
+
+        ul.start();
+        dispose(ul);
+        
+        LightLocalizer lo=new LightLocalizer(0);
+        lo.start();
+        dispose(lo);
+        
+        Navigation na=new Navigation(x0,y0,0);
+        na.start();
+        dispose(na);
+        
+        LightLocalizer lo1=new LightLocalizer(1);
+        lo1.start();
+        dispose(lo1);
+        
+        TraverseZipline tz= new TraverseZipline(xc,yc);
+        tz.start();
+        dispose(tz);
+        
+        Navigation na1=new Navigation(xd,yd,2);
+        na1.start();
+        dispose(na1);
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ;
@@ -157,6 +218,11 @@ public class Main {
     public static void setTeamColor(/* TODO Add Wi-Fi parameters here*/) {
         // TODO After Beta demo, add team color logic here
         teamColor = TeamColor.GREEN;
+    }
+    public static void dispose(Thread thread) {
+        try {
+            thread.join(); // wait till thread dies
+        } catch (InterruptedException e) {}
     }
     
     /*************************************************************************************************/
