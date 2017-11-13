@@ -58,10 +58,10 @@ public class TestLightLocalizer {
         dispose(lo1);
         */
         
-        odometer.setX(1*TILE); odometer.setY(6*TILE);
+      /*  odometer.setX(1*TILE); odometer.setY(6*TILE);
         TraverseZipline tz= new TraverseZipline(2,6);
         tz.start();
-        dispose(tz);
+        dispose(tz);*/
         
       
         // TODO Assert result

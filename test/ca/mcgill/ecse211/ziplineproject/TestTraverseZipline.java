@@ -30,8 +30,8 @@ public class TestTraverseZipline {
 	        
 	        odometer.setX(2*TILE); odometer.setY(1*TILE);
 	        
-	        TraverseZipline tz= new TraverseZipline(2,2);
-	        tz.run();
+	      /*  TraverseZipline tz= new TraverseZipline(2,2);
+	        tz.run();*/
 	        
 	    }
 }
