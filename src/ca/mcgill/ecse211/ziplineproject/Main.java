@@ -1,6 +1,11 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 import ca.mcgill.ecse211.ziplineproject.UltrasonicLocalizer.LocalizationType;
+
+import java.util.Map;
+
+import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+
 import lejos.hardware.Button;
 import lejos.hardware.Device;
 import lejos.hardware.Sound;
@@ -40,7 +45,15 @@ import lejos.robotics.SampleProvider;
  * 
  * @author Younes Boubekeur 
  */
+@SuppressWarnings("rawtypes")
 public class Main {
+    
+    /**The IP address of the computer running the server application*/
+    private static final String SERVER_IP = "192.168.2.36"; // TA or Prof: 192.168.2.3
+    /**Contestants' Team number*/
+    private static final int TEAM_NUMBER = 10;
+    // Enable/disable printing of debug info from the WiFi class
+    private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
 
     /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.115; // was 2.13
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
@@ -52,13 +65,54 @@ public class Main {
     /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 90;
     /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 100;
     
-    /**The <i>x</i> coordinate of the zipline approach.*/public static int x0 = 0;
-    /**The <i>y</i> coordinate of the zipline approach.*/public static int y0 = 0;
-    /**The <i>x</i> coordinate of the zipline.*/public static int xc = 0;
-    /**The <i>y</i> coordinate of the zipline.*/public static int yc = 0;
-    
-    /**The start corner for the competition.*/
-    public static int startCorner;
+    // Wi-Fi parameters
+    /**Red team number*/public static int redTeam;
+    /**Red team's starting corner*/public static int redCorner;
+    /**Green team number*/public static int greenTeam;
+    /**Green team's starting corner*/public static int greenCorner;
+    /**Color of green opponent flag*/public static int og;
+    /**Color of red opponent flag*/public static int or;
+    /**The <i>x</i> coordinate of the lower left hand corner of Red Zone*/public static int red_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of Red Zone*/public static int red_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of Red Zone*/public static int red_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of Red Zone*/public static int red_ur_y;
+    /**The <i>x</i> coordinate of the lower left hand corner of Red Zone*/public static int green_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of Red Zone*/public static int green_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of Red Zone*/public static int green_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of Red Zone*/public static int green_ur_y;
+    /**The <i>x</i> coordinate of the Red Zone zip line endpoint*/public static int zc_r_x;
+    /**The <i>y</i> coordinate of the Red Zone zip line endpoint*/public static int zc_r_y;
+    /**The <i>x</i> coordinate of the Red Zone zip line approach*/public static int zo_r_x; // Was xd
+    /**The <i>y</i> coordinate of the Red Zone zip line approach*/public static int zo_r_y; // Was yd
+    /**The <i>x</i> coordinate of the Red Zone zip line endpoint*/public static int zc_g_x; // Was xc
+    /**The <i>y</i> coordinate of the Red Zone zip line endpoint*/public static int zc_g_y; // Was yc
+    /**The <i>x</i> coordinate of the Green Zone zip line approach*/public static int zo_g_x; // Was x0
+    /**The <i>y</i> coordinate of the Green Zone zip line approach*/public static int zo_g_y; // Was y0
+    /**The <i>x</i> coordinate of the lower left hand corner of the horizontal shallow water zone*/
+    public static int sh_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of the horizontal shallow water zone*/
+    public static int sh_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of the horizontal shallow water zone*/
+    public static int sh_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of the horizontal shallow water zone*/
+    public static int sh_ur_y;
+    /**The <i>x</i> coordinate of the lower left hand corner of the vertical shallow water zone*/
+    public static int sv_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of the vertical shallow water zone*/
+    public static int sv_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of the vertical shallow water zone*/
+    public static int sv_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of the vertical shallow water zone*/
+    public static int sv_ur_y;
+    /**The <i>x</i> coordinate of the lower left hand corner of search region in Red Zone*/public static int sr_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of search region in Red Zone*/public static int sr_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of search region in Red Zone*/public static int sr_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of search region in Red Zone*/public static int sr_ur_y;
+    /**The <i>x</i> coordinate of the lower left hand corner of search region in Green Zone*/public static int sg_ll_x;
+    /**The <i>y</i> coordinate of the lower left hand corner of search region in Green Zone*/public static int sg_ll_y;
+    /**The <i>x</i> coordinate of the upper right hand corner of search region in Green Zone*/public static int sg_ur_x;
+    /**The <i>y</i> coordinate of the upper right hand corner of search region in Green Zone*/public static int sg_ur_y;
+
     /**<code>int</code> corresponding to the EV3 button being pressed.*/
     public static int buttonChoice;
     /**Controls whether to print odometry and battery information to Console (and on the robot screen)*/
@@ -130,16 +184,16 @@ public class Main {
      */
     @SuppressWarnings("static-access")
     public static void main(String[] args) {
-        //Sound.beep();
+        // Indicate program has loaded
         Sound.beepSequenceUp();
-        setTeamColor();
+        // Get Wi-Fi parameters from the server
+        getWiFiParameters();
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
         //TestNavigation.testNavigation();
         TestLightLocalizer.testLightLocalizer();
         //TestTraverseZipline.testTraverseZipline();
-        
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ; // do nothing
@@ -160,6 +214,61 @@ public class Main {
     public static void setTeamColor(/* TODO Add Wi-Fi parameters here*/) {
         // TODO After Beta demo, add team color logic here
         teamColor = TeamColor.GREEN;
+    }
+    
+    /**
+     * Get Wi-Fi parameters from the server
+     */
+    public static void getWiFiParameters() {
+        // Initialize WifiConnection class
+        WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
+        try {
+            Map data = conn.getData();
+            // Initialize the global variables 
+            redTeam = ((Long) data.get("RedTeam")).intValue();
+            redCorner = ((Long) data.get("RedCorner")).intValue();
+            greenTeam = ((Long) data.get("GreenTeam")).intValue();
+            greenCorner = ((Long) data.get("GreenCorner")).intValue();
+            og = ((Long) data.get("OG")).intValue();
+            or = ((Long) data.get("OR")).intValue();
+            red_ll_x = ((Long) data.get("Red_LL_x")).intValue();
+            red_ll_y = ((Long) data.get("Red_LL_y")).intValue();
+            red_ur_x = ((Long) data.get("Red_UR_x")).intValue();
+            red_ur_y = ((Long) data.get("Red_UR_y")).intValue();
+            green_ll_x = ((Long) data.get("Green_LL_x")).intValue();
+            green_ll_y = ((Long) data.get("Green_LL_y")).intValue();
+            green_ur_x = ((Long) data.get("Green_UR_x")).intValue();
+            green_ur_y = ((Long) data.get("Green_UR_y")).intValue();
+            zc_r_x = ((Long) data.get("ZC_R_x")).intValue();
+            zc_r_y = ((Long) data.get("ZC_R_y")).intValue();
+            zo_r_x = ((Long) data.get("ZO_R_x")).intValue();
+            zo_r_y = ((Long) data.get("ZO_R_y")).intValue();
+            zc_g_x = ((Long) data.get("ZC_G_x")).intValue();
+            zc_g_y = ((Long) data.get("ZC_G_y")).intValue();
+            zo_g_x = ((Long) data.get("ZO_G_x")).intValue();
+            zo_g_y = ((Long) data.get("ZO_G_y")).intValue();
+            sh_ll_x = ((Long) data.get("SH_LL_x")).intValue();
+            sh_ll_y = ((Long) data.get("SH_LL_y")).intValue();
+            sh_ur_x = ((Long) data.get("SH_UR_x")).intValue();
+            sh_ur_y = ((Long) data.get("SH_UR_y")).intValue();
+            sv_ll_x = ((Long) data.get("SV_LL_x")).intValue();
+            sv_ll_y = ((Long) data.get("SV_LL_y")).intValue();
+            sv_ur_x = ((Long) data.get("SV_UR_x")).intValue();
+            sv_ur_y = ((Long) data.get("SV_UR_y")).intValue();
+            sr_ll_x = ((Long) data.get("SR_LL_x")).intValue();
+            sr_ll_y = ((Long) data.get("SR_LL_y")).intValue();
+            sr_ur_x = ((Long) data.get("SR_UR_x")).intValue();
+            sr_ur_y = ((Long) data.get("SR_UR_y")).intValue();
+            sg_ll_x = ((Long) data.get("SG_LL_x")).intValue();
+            sg_ll_y = ((Long) data.get("SG_LL_y")).intValue();
+            sg_ur_x = ((Long) data.get("SG_UR_x")).intValue();
+            sg_ur_y = ((Long) data.get("SG_UR_y")).intValue();
+
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        
+        
     }
     
     /*************************************************************************************************/
