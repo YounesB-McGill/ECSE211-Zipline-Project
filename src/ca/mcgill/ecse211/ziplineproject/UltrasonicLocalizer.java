@@ -194,10 +194,10 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	 */
 	private void clockwise(double theta, boolean con) {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(convertAngle(wheelRadius, width, theta), true);
 		rightMotor.rotate(-convertAngle(wheelRadius, width, theta), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		if (con == false) {
 			leftMotor.waitComplete();
 			rightMotor.waitComplete();
@@ -210,10 +210,10 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	 */
 	private void clockwise() {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.backward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
@@ -221,20 +221,20 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	 */
 	private void counterclockwise() {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.backward();
 		rightMotor.forward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
 	 * Make robot stop
 	 */
 	private static void stopMotor() {
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.stop();
 		rightMotor.stop();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		leftMotor.waitComplete();
 		rightMotor.waitComplete();
 	}
@@ -258,10 +258,10 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	private static void driveForward() {
 		stopMotor();
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.forward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**

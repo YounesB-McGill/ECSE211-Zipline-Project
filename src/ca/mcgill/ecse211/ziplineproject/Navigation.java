@@ -38,7 +38,7 @@ public class Navigation extends Thread{
     /**Initialization of the odometer which calculates the position and orientation of the robot*/
     public static Odometer odometer = Main.odometer;
    
-    private int startCorner = Main.startCorner;
+    private int startCorner = Main.greenCorner;
     /**Used to synchronize access to a resource across multiple threads*/public Object lock;
 
     
@@ -69,7 +69,7 @@ public class Navigation extends Thread{
         this.x=x;
         this.y=y;
         this.type=type;
-        leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
+        //leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
     }
     
     public void run(){
@@ -84,14 +84,20 @@ public class Navigation extends Thread{
     	if(type==0){
     		//localization ends, navigation starts
             if(startCorner == 0 || startCorner == 3) { // SW, NW
-            	travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
+            	travelTo(Main.zo_g_x,Main.zo_g_y); // This will take us to (x0, y0)
             } else if(startCorner == 1) { // SE|
                 travelTo(1, 1); //avoid entering zip line area
-                travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
+                travelTo(Main.zo_g_x,Main.zo_g_y); // This will take us to (x0, y0)
             } else { // NE
                 travelTo(1, 7); //avoid entering zip line area
-                travelTo(Main.x0,Main.y0); // This will take us to (x0, y0)
+                travelTo(Main.zo_g_x,Main.zo_g_y); // This will take us to (x0, y0)
             }
+            
+          /*  double nowx=odometer.getX();
+            double nowy=odometer.getY();
+            if(nowx!=Main.zo_g_x || nowy!=Main.zo_g_y){
+            	travelTo(Main.zo_g_x,Main.zo_g_y);
+            }*/
     	   
     	}
     	else{
@@ -117,8 +123,8 @@ public class Navigation extends Thread{
          
          // Stop motors when we reach destination
          //leftMotor.startSynchronization();
-         leftMotor.stop(true);
-         rightMotor.stop(true);
+         leftMotor.stop();
+         rightMotor.stop();
          //leftMotor.endSynchronization();
          
      }
@@ -174,7 +180,7 @@ public class Navigation extends Thread{
          setSpeed(0);
          setSpeed(speed);
          forward(distance);
-         
+         stopMotor();
          
          isTraveling = false;
                         
@@ -252,7 +258,7 @@ public class Navigation extends Thread{
         }
         
         setSpeed(0);
-
+        stopMotor();
         isTurning = false;
         
     }
@@ -338,14 +344,7 @@ public class Navigation extends Thread{
         rightMotor.setSpeed(speed);
     }
     
-    /**
-     * Set the speed for both the left and right motors.
-     * @param speed The speed of the motor in degrees per second
-     */
-    public static void setSpeed(float speed) {
-        setLeftSpeed(speed);
-        setRightSpeed(speed);
-    }
+  
     
     /**
      * Set the acceleration for the left motor.
@@ -363,14 +362,7 @@ public class Navigation extends Thread{
         rightMotor.setAcceleration(acceleration);
     }
     
-    /**
-     * Set the acceleration for both the left and right motors.
-     * @param acceleration The acceleration of the motor in degrees per second
-     */
-    public static void setAcceleration(int acceleration) {
-        setLeftAcceleration(acceleration);
-        setRightAcceleration(acceleration);
-    }
+   
     
     /**
      * Make left motor go forward
@@ -424,8 +416,50 @@ public class Navigation extends Thread{
         leftMotor.rotate(-convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(-convertDistance(WHEEL_RADIUS, distance), false);
     }
+    /**
+     * Set the speed for both the left and right motors.
+     * @param speed The speed of the motor in degrees per second
+     */
+    public static void setSpeed(float speed) {
+        // Stop both motors at once
+        leftMotor.stop(true); // boolean is for immediate return
+        rightMotor.stop(false);
+        // Clear default speed value
+        leftMotor.setSpeed(0);
+        rightMotor.setSpeed(0);
+        // Set the speed level to the parameter
+        leftMotor.setSpeed(speed);
+        rightMotor.setSpeed(speed);
+    }
     
+    /**
+     * Set the acceleration for both the left and right motors.
+     * @param acceleration The acceleration of the motor in degrees per second squared
+     */
+    public static void setAcceleration(int acceleration) {
+     // Stop both motors at once
+        leftMotor.stop(true); // boolean is for immediate return
+        rightMotor.stop(false);
+        // Clear default acceleration value
+        leftMotor.setAcceleration(0);
+        rightMotor.setAcceleration(0);
+        // Set the acceleration level to the parameter
+        leftMotor.setAcceleration(acceleration);
+        rightMotor.setAcceleration(acceleration);
+    }
     
+    /**
+	 * Make robot stop
+	 */
+	private void stopMotor() {
+		//leftMotor.startSynchronization();
+		leftMotor.stop();
+		rightMotor.stop();
+		//leftMotor.endSynchronization();
+		//leftMotor.waitComplete();
+		//rightMotor.waitComplete();
+	}
+
     /**
      * Go forward for a specified distance
      * @param distance Desired distance in cm.

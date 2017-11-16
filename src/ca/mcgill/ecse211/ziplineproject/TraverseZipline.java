@@ -37,7 +37,7 @@ public class TraverseZipline extends Thread  {
 	public TraverseZipline(int xc, int yc) {
 		this.xc=xc;
 		this.yc=yc;
-		leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
+		//leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
 
 	}
 
@@ -63,10 +63,10 @@ public class TraverseZipline extends Thread  {
 	private void driveForward() {
 		stopMotor();
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.forward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
@@ -80,10 +80,10 @@ public class TraverseZipline extends Thread  {
 	private void driveBackABit() {
 		stopMotor();
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(-convertDistance(WHEEL_RADIUS, 1.5), true);
 		rightMotor.rotate(-convertDistance(WHEEL_RADIUS, 1.5), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		leftMotor.waitComplete();
 		rightMotor.waitComplete();
 		stopMotor();
@@ -106,10 +106,10 @@ public class TraverseZipline extends Thread  {
 	private void clockwise(double theta, boolean con) {
 		stopMotor();
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		if (con == false) {
 			leftMotor.waitComplete();
 			rightMotor.waitComplete();
@@ -141,10 +141,10 @@ public class TraverseZipline extends Thread  {
 	 * Make robot stop
 	 */
 	private void stopMotor() {
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.stop();
 		rightMotor.stop();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		leftMotor.waitComplete();
 		rightMotor.waitComplete();
 	}

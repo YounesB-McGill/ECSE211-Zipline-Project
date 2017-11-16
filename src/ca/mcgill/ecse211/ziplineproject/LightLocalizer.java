@@ -27,7 +27,7 @@ public final class LightLocalizer extends Thread {
 	private static final double sensorDis = -11; // -4
 	private static final double TILE = Main.TILE;
 	private double intensity;
-	private int startCorner = Main.startCorner;
+	private int startCorner = Main.greenCorner;
 
 	private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
 	private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
@@ -52,7 +52,7 @@ public final class LightLocalizer extends Thread {
 		this.sampleSize = lightIntensity.sampleSize();
 		this.csData = new float[sampleSize];
 		this.type=type;
-		leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
+		//leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
 	}
 
 	/**
@@ -64,11 +64,13 @@ public final class LightLocalizer extends Thread {
 			doLightLocalizationNew(1, 1);
 			stopMotor();
 			navigation.turnTo(0);
+			
 		    resetAccordingToCorner();
 		    stopMotor();
 		}
 		else if(type==1){
-			doLightLocalizationNew(Main.x0, Main.y0);
+			doLightLocalizationNew(Main.zo_g_x, Main.zo_g_y);
+			stopMotor();
 		}
 		else if(type==2){
 			driveForward();
@@ -81,17 +83,20 @@ public final class LightLocalizer extends Thread {
 			
 			// stop the motors
 			stopMotor();
+			driveForward(-8,false);
 			traverseMotor.stop();
-			doLightLocalizationNew(Main.xd, Main.yd);
-			odometer.setX(Main.xd*TILE);
-    		odometer.setY(Main.yd*TILE);
+			doLightLocalizationNew(Main.zo_r_x, Main.zo_r_y);
+			stopMotor();
+			odometer.setX(Main.zo_r_x*TILE);
+    		odometer.setY(Main.zo_r_y*TILE);
 			Sound.beepSequence();
 			Sound.beepSequence();
-			navigation.travelTo(Main.xf, Main.yf);
+			navigation.travelTo(Main.sr_ur_x, Main.sr_ur_y);
 			Sound.beepSequenceUp();
 			Sound.beepSequenceUp();
 			stopMotor();
-			doLightLocalizationNew(Main.xf, Main.yf);
+			doLightLocalizationNew(Main.sr_ur_x, Main.sr_ur_y);
+			stopMotor();
 		}
 	}
 
@@ -169,7 +174,14 @@ public final class LightLocalizer extends Thread {
 			} else if (i == 2) {
 				// the robot locates on a line 
 				//so we follow the line to find a point 
-				navigation.turnTo(heading[0]);
+				if(type==0){
+					navigation.turnTo(heading[0]);
+				}
+				else {
+					navigation.turnTo(heading[1]);
+				}
+				
+				stopMotor();
 				driveForward(12, false);
 			} else if (i == 3){
 				double[] angle = new double[3];
@@ -178,9 +190,10 @@ public final class LightLocalizer extends Thread {
 				double directionAngle = findNewDirection(heading, angle, MinAng);
 				//here turnTo method go to the reverse direction, so I just drive backwards
 				navigation.turnTo(directionAngle);
+				stopMotor();
 				driveForward(-5, false);
 			}
-			
+			stopMotor();
 			//recursively call doLightLocalization
 			doLightLocalizationNew(X, Y);
 			return;
@@ -202,7 +215,9 @@ public final class LightLocalizer extends Thread {
 			double directionAngle = findNewDirection(heading, angle, MinAng);
 			//here turnTo method go to the reverse direction, so I just drive backwards
 			navigation.turnTo(directionAngle);
+			stopMotor();
 			driveForward(-10, false);
+			stopMotor();
 			//recursively call doLightLocalization
 			doLightLocalizationNew(X, Y);
 			return;
@@ -222,8 +237,11 @@ public final class LightLocalizer extends Thread {
 		
 		// do the localization
 		navigation.turnTo(direction1);
+		stopMotor();
 		driveForward(distance1, false);
+		stopMotor();
 		navigation.turnTo(direction2);
+		stopMotor();
 		driveForward(distance2, false);
 
 		// stop motor
@@ -254,9 +272,20 @@ public final class LightLocalizer extends Thread {
 				break;
 			}
 		}		
+		//correction by offset
+		counterclockwise(5,false);
+		stopMotor();
+		
+		if (!hitGridLine()) {			
+			counterclockwise(5,false);
+			stopMotor();
+		}
+		
+		//calibrattion
 		double currentTheta = odometer.getTheta() * 180 / Math.PI;
 		int calibration = setToClosestTheta(currentTheta);
 		odometer.setTheta(calibration * Math.PI / 180);
+		stopMotor();
 	
 	}
 
@@ -433,10 +462,10 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void driveForward(double distance, boolean con) {
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
 		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		if (con == false) {
 			leftMotor.waitComplete();
 			rightMotor.waitComplete();
@@ -450,10 +479,10 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void clockwise(double theta, boolean con) {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		if (con == false) {
 			leftMotor.waitComplete();
 			rightMotor.waitComplete();
@@ -468,10 +497,10 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void counterclockwise(double theta, boolean con) {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
 		rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 		if (con == false) {
 			leftMotor.waitComplete();
 			rightMotor.waitComplete();
@@ -492,10 +521,10 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void clockwise() {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.backward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
@@ -503,22 +532,22 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void counterclockwise() {
 		setRotateSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.backward();
 		rightMotor.forward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
 	 * Make robot stop
 	 */
 	private void stopMotor() {
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.stop();
 		rightMotor.stop();
-		leftMotor.endSynchronization();
-		leftMotor.waitComplete();
-		rightMotor.waitComplete();
+		//leftMotor.endSynchronization();
+		//leftMotor.waitComplete();
+		//rightMotor.waitComplete();
 	}
 
 	/**
@@ -550,10 +579,10 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void driveForward() {
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.forward();
 		rightMotor.forward();
-		leftMotor.endSynchronization();
+		//leftMotor.endSynchronization();
 	}
 
 	/**
@@ -562,12 +591,12 @@ public final class LightLocalizer extends Thread {
 	 */
 	private void driveBackABit() {
 		setForwardSpeed();
-		leftMotor.startSynchronization();
+		//leftMotor.startSynchronization();
 		leftMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), true);
-		rightMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), true);
-		leftMotor.endSynchronization();
-		leftMotor.waitComplete();
-		rightMotor.waitComplete();
+		rightMotor.rotate(-convertDistance(WHEEL_RADIUS, forDis), false);
+		//leftMotor.endSynchronization();
+		//leftMotor.waitComplete();
+		//rightMotor.waitComplete();
 	}
 
 	/**
