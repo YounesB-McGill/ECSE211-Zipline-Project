@@ -16,6 +16,7 @@ import lejos.hardware.Sound;
  * 
  * @author Chaoyi Liu
  */
+
 public final class LightLocalizer extends Thread {
 
 	private static double WHEEL_RADIUS = Main.WHEEL_RADIUS;
@@ -318,6 +319,7 @@ public final class LightLocalizer extends Thread {
      * @param currTheta
      * @return
      */
+
 	private int setToClosestTheta(double currTheta) {
 		double[] error = new double[4];
 		double closestValue = 360;
@@ -629,5 +631,6 @@ public final class LightLocalizer extends Thread {
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
+
 
 }

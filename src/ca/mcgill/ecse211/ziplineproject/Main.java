@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 
-
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,21 +50,27 @@ import lejos.robotics.SampleProvider;
 public class Main {
     
     /**The IP address of the computer running the server application*/
+
     private static final String SERVER_IP = "192.168.2.3"; // TA or Prof: 192.168.2.3
+
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
     // Enable/disable printing of debug info from the WiFi class
     private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
 
+
     /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.13; // was 2.13
+
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
     public static final double TRACK = 14.68; // was 14.68, 14.80, 15.0, 15.2.
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     
+
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 180;
     /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 135;
     /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 120;
     /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 350;
+
     
     // Wi-Fi parameters
     /**Red team number*/public static int redTeam;
@@ -86,8 +91,10 @@ public class Main {
     /**The <i>y</i> coordinate of the Red Zone zip line endpoint*/public static int zc_r_y;
     /**The <i>x</i> coordinate of the Red Zone zip line approach*/public static int zo_r_x; // Was xd
     /**The <i>y</i> coordinate of the Red Zone zip line approach*/public static int zo_r_y; // Was yd
+
     /**The <i>x</i> coordinate of the Green Zone zip line endpoint*/public static int zc_g_x; // Was xc
     /**The <i>y</i> coordinate of the Green Zone zip line endpoint*/public static int zc_g_y; // Was yc
+
     /**The <i>x</i> coordinate of the Green Zone zip line approach*/public static int zo_g_x; // Was x0
     /**The <i>y</i> coordinate of the Green Zone zip line approach*/public static int zo_g_y; // Was y0
     /**The <i>x</i> coordinate of the lower left hand corner of the horizontal shallow water zone*/
@@ -186,15 +193,18 @@ public class Main {
      */
     @SuppressWarnings("static-access")
     public static void main(String[] args) {
+
     	//leftMotor.setAcceleration(175);
     	//rightMotor.setAcceleration(175);
         // Indicate program has loaded
         Sound.beepSequenceUp();
         setTeamColor();
+
         // Get Wi-Fi parameters from the server
         getWiFiParameters();
         //startCorner = Display.getStartCornerUI();
         
+
         //buttonChoice =  Button.waitForAnyPress();
         
         int button = 0;
@@ -254,6 +264,7 @@ public class Main {
 			}
 		};
 		timer.schedule(task, delay);
+
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ; // do nothing
@@ -276,6 +287,7 @@ public class Main {
         teamColor = TeamColor.GREEN;
     }
     
+
     public static void dispose(Thread thread) {
 		try {
 			thread.join(); // wait till thread dies
@@ -283,6 +295,7 @@ public class Main {
 		}
 	}
     
+
     /**
      * Get Wi-Fi parameters from the server
      */
