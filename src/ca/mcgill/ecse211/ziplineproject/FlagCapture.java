@@ -1,9 +1,11 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 import ca.mcgill.ecse211.ziplineproject.Main.TeamColor;
+import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.robotics.Color;
 
 /**
  * This class contains the flag detection and capture logic used in the competition.
@@ -42,6 +44,7 @@ public class FlagCapture {
      * Execute the flag capture logic by navigating to the search zone, detecting flags, and indicating capture
      */
     public static void doFlagCapture() { // Instead of a start method
+             
         setTargetFlag();
         setSearchZoneCoordinates();
         navigation.travelTo(searchZone_ur_x, searchZone_ur_y); // or (searchZone_ll_x, searchZone_ll_y)
@@ -49,6 +52,13 @@ public class FlagCapture {
         while(!flagCaptured) {
             // TODO
         }
+    }
+    
+    public static void doFlagCaptureTest() {
+        // Local variable used for testing
+        while(true/*Button.waitForAnyPress() != Button.ID_ESCAPE*/) 
+            detectFlag();
+        
     }
     
     /**
@@ -71,27 +81,54 @@ public class FlagCapture {
     }
     
     /**
-     * Set the flag targeted for capture
+     * Set the flag targeted for capture. This method translates the information given in the Wi-Fi
+     * parameter to the convention used in LeJOS. For example, RED has the Wi-Fi parameter 1, but in LeJOS 
+     * <code><b>RED</b> = 0;</code>
      */
     public static void setTargetFlag() {
+        // Set the targetFlag global variable to the Wi-Fi parameter
         if(teamColor.equals(TeamColor.GREEN)) {
             targetFlag = Main.or; // TODO Confirm this
         } else {
             targetFlag = Main.og;
         }
+        // Translate to LeJOS convention (BLUE and YELLOW are the same)
+        if(targetFlag==1) targetFlag = 0; // RED
+        if(targetFlag==4) targetFlag = 6; // WHITE
     }
     
     /**
      * Check if the robot is close to a flag and detect its color in that case
      */
     public static void detectFlag() {
-        int detected = 0; 
-        // TODO Add flag detection logic here
+        float[] colorSample = {0,0,0};
+        
+        
+        flagSensor.getColorIDMode().fetchSample(colorSample, 0);
+        int detected = (int) colorSample[0]; // Color detected by the ColorSensor
+        
+        // Constants **from the Color class**, used for testing
+        // THESE ARE **NOT** THE SAME AS THE SPEC GIVEN BY THE PROFS!
+        
+        final int RED = 0; // Prof: 1
+        final int BLUE = 2; // Same
+        final int YELLOW = 3; // Same
+        final int WHITE = 6; // Prof: 4
+        
+        targetFlag = RED; // TODO Remove this when getting Wi-Fi parameters
+        
+        // For debugging:
+        System.out.println("Detected: "+detected+", Target is: "+targetFlag);
         
         if(detected==targetFlag) {
             captureFlag();
             flagCaptured = true;
         }
+        // TODO Remove this else statement when flag detection is reliable
+        else {
+            //Sound.beep(); // Beeping annoys people
+        }
+        try {Thread.sleep(3000);}catch(Exception e) {}
     }
     
     /**
