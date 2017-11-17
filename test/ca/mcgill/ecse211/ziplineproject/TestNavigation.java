@@ -51,7 +51,7 @@ public class TestNavigation {
     private static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
     private static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
     private static EV3LargeRegulatedMotor traverseMotor = Main.traverseMotor;
-    private static EV3UltrasonicSensor usSensor = Main.usSensor;
+    //private static EV3UltrasonicSensor usSensor = Main.usSensor;
     private static EV3ColorSensor cSensor = Main.cSensor;
     private static TextLCD textLCD = Main.textLCD;
     

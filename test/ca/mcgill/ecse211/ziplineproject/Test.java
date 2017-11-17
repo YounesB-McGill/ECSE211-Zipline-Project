@@ -6,7 +6,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 
-/**
+/**s
  * This class contains all the tests that we need to carry out,
  * including unit and integration tests.
  * 
@@ -26,7 +26,7 @@ public class Test{
     private static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
     private static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
     private static EV3LargeRegulatedMotor traverseMotor = Main.traverseMotor;
-    private static EV3UltrasonicSensor usSensor = Main.usSensor;
+    //private static EV3UltrasonicSensor usSensor = Main.usSensor;
     private static EV3ColorSensor cSensor = Main.cSensor;
     private static TextLCD textLCD = Main.textLCD;
     

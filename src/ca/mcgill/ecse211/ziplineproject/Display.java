@@ -1,16 +1,17 @@
 /*
  * OdometryDisplay.java
- */
+ 
 package ca.mcgill.ecse211.ziplineproject;
 
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 
-/**
+*//**
  * The <code>Display</code> class displays Odometer data on the device LCD using a Thread. It
  * also contains methods to format and display other information on the screen, including the user interface.
- */
+ *//*
+
 public class Display implements Runnable {
     private static final long DISPLAY_PERIOD = 250;
     private Odometer odometer = Main.odometer;
@@ -22,16 +23,16 @@ public class Display implements Runnable {
      */
     public boolean printToConsole = Main.printToConsole;
 
-    /**
+    *//**
      * Display constructor
-     */
+     *//*
     public Display() {
 
     }
 
-    /**
+    *//**
      * Runs the main display Thread, which displays Odometer data
-     */
+     *//*
     public void run() {
         long displayStart, displayEnd;
         double[] position = new double[3];
@@ -83,12 +84,12 @@ public class Display implements Runnable {
         } // end while(true)
     }
 
-    /**
+    *//**
      * Formats a double into a String representation of a decimal number 
      * @param x The double to be converted
      * @param places The desired number of decimal places
      * @return A string of the formatted double value
-     */
+     *//*
     private static String formattedDoubleToString(double x, int places) {
         String result = "", stack = "";
         long t;
@@ -120,10 +121,10 @@ public class Display implements Runnable {
         return result;
     }
     
-    /**
+    *//**
      * User interface method to select the start corner
      * @return The start corner, a number in the range [0, 3]
-     */
+     *//*
     public static int getStartCornerUI() {
         int startCorner = Main.startCorner;
         int buttonChoice = Main.buttonChoice;
@@ -149,10 +150,10 @@ public class Display implements Runnable {
         return startCorner;
     }
     
-    /**
+    *//**
      * User interface method to select the zipline approach coordinates
      * @return The zipline coordinates, in the form of an int array {x0, y0}
-     */
+     *//*
     public static int[] getXYUI() {
         int buttonChoice, x0 = Main.x0, y0 = Main.y0;
         do {
@@ -166,9 +167,11 @@ public class Display implements Runnable {
         return new int[] {x0, y0};
     }
     
+
     /**
      * Helper method to draw the <i>x<sub>0</sub></i> and <i>y<sub>0</sub></i> selection UI on the LCD
      */
+
     public static void drawSetXYUI() {
         int x0 = Main.x0, y0 = Main.y0;
         textLCD.clear();
@@ -181,21 +184,123 @@ public class Display implements Runnable {
         textLCD.drawString("button to confirm", 0, 6);
     }
     
-    /**
+    *//**
      * Clears the display after a series of <code>out.print()</code> statements
-     */
+     *//*
     public void clear() {
         for (int i = 0; i < 32; i++) {
             System.out.println();
         }
     }
     
-    /**
+    *//**
      * Starts the Display Thread, which displays odometry information by default
-     */
+     *//*
     public void start() {
         runner = new Thread(this);
         runner.start();
     }
+
+}
+*/
+/*
+ * OdometryDisplay.java
+ */
+
+
+package ca.mcgill.ecse211.ziplineproject;
+import lejos.hardware.lcd.TextLCD;
+
+public class Display extends Thread {
+  private static final long DISPLAY_PERIOD = 250;
+  private Odometer odometer = Main.odometer;
+  private static TextLCD t = Main.textLCD;
+
+  // constructor
+  public Display() {
+   
+  }
+
+  // run method (required for Thread)
+  public void run() {
+    long displayStart, displayEnd;
+    double[] position = new double[3];
+
+    // clear the display once
+    t.clear();
+
+    while (true) {
+      displayStart = System.currentTimeMillis();
+
+      // clear the lines for displaying odometry information
+      t.drawString("X:              ", 0, 0);
+      t.drawString("Y:              ", 0, 1);
+      t.drawString("T:              ", 0, 2);
+
+      // get the odometry information
+      odometer.getPosition(position, new boolean[] {true, true, true});
+
+      // display odometry information
+      for (int i = 0; i < 3; i++) {
+        t.drawString(formattedDoubleToString(position[i], 2), 3, i);
+        if(i==2){
+        	t.drawString(formattedDoubleToString(position[i]/Math.PI*180, 2), 3, i);
+        }
+      }
+
+      // throttle the OdometryDisplay
+      displayEnd = System.currentTimeMillis();
+      if (displayEnd - displayStart < DISPLAY_PERIOD) {
+        try {
+          Thread.sleep(DISPLAY_PERIOD - (displayEnd - displayStart));
+        } catch (InterruptedException e) {
+          // there is nothing to be done here because it is not
+          // expected that OdometryDisplay will be interrupted
+          // by another thread
+        }
+      }
+    }
+  }
+
+  private static String formattedDoubleToString(double x, int places) {
+    String result = "";
+    String stack = "";
+    long t;
+
+    // put in a minus sign as needed
+    if (x < 0.0)
+      result += "-";
+
+    // put in a leading 0
+    if (-1.0 < x && x < 1.0)
+      result += "0";
+    else {
+      t = (long) x;
+      if (t < 0)
+        t = -t;
+
+      while (t > 0) {
+        stack = Long.toString(t % 10) + stack;
+        t /= 10;
+      }
+
+      result += stack;
+    }
+
+    // put the decimal, if needed
+    if (places > 0) {
+      result += ".";
+
+      // put the appropriate number of decimals
+      for (int i = 0; i < places; i++) {
+        x = Math.abs(x);
+        x = x - Math.floor(x);
+        x *= 10.0;
+        result += Long.toString((long) x);
+      }
+    }
+
+    return result;
+  }
 
 }
