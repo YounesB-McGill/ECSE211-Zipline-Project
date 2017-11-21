@@ -125,7 +125,7 @@ public class Display implements Runnable {
      * @return The start corner, a number in the range [0, 3]
      */
     public static int getStartCornerUI() {
-        int startCorner = Main.startCorner;
+        int startCorner = Main.greenCorner;
         int buttonChoice = Main.buttonChoice;
         do {
             // clear the display
@@ -154,7 +154,7 @@ public class Display implements Runnable {
      * @return The zipline coordinates, in the form of an int array {x0, y0}
      */
     public static int[] getXYUI() {
-        int buttonChoice, x0 = Main.x0, y0 = Main.y0;
+        int buttonChoice, x0 = 0 /*Main.zo_g_x*/, y0 = 0 /*Main.zo_g_y*/; // UI not needed for competition
         do {
             drawSetXYUI();
             buttonChoice = Button.waitForAnyPress();
@@ -170,7 +170,7 @@ public class Display implements Runnable {
      * Helper method to draw the <i>x<sub>0</sub></i> and <i>y<sub>0</sub></i> selection UI on the LCD
      */
     public static void drawSetXYUI() {
-        int x0 = Main.x0, y0 = Main.y0;
+        int x0 = 0 /*Main.zo_g_x*/, y0 = 0 /*Main.zo_g_y*/; // UI not needed for competition
         textLCD.clear();
         textLCD.drawString("   Choose x,y   ", 0, 0);
         textLCD.drawString("   coordinate:  ", 0, 1);

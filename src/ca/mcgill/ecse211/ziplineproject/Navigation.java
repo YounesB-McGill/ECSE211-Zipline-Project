@@ -119,10 +119,25 @@ public class Navigation {
     } // end travelTo()
 
     /**
-    * Turn to specified angle
-    * 
-    * @param theta Theta in degrees
-    */
+     * Turn to specified angle. This method works by first getting the current
+     * theta, then deciding whether to turn right or left by the calculated
+     * difference. Here, two scales are used to track the angles:<ul>
+     * <li>The 180<sup>o</sup> scale, which goes from -180<sup>o</sup> to 179<sup>o</sup>
+     * and has a discontinuity at the back of the robot, assuming it is pointing to 0<sup>o</sup>.</li>
+     * <li>The 360<sup>o</sup> scale, which goes from 0<sup>o</sup> to 359<sup>o</sup>
+     * and has a discontinuity at the front of the robot, when it is pointing to 0<sup>o</sup>.</li></ul>
+     * Both scales have the same values in the range [0<sup>o</sup>, 179<sup>o</sup>].
+     * 
+     * If both the current theta and destination angle are on the same side of
+     * the discontinuities caused by the degree wraparound, the robot can turn right or left by their difference.
+     * On the other hand, if the angles are on opposite sides, then their difference is calculated using both the
+     * 180<sup>o</sup> and 360<sup>o</sup> scales. The robot then turns right or left according to <i>the 
+     * smallest difference</i>.
+     * 
+     * <pre><img src="{@docRoot}/doc-files/turnTo2.png"></img></pre>
+     * 
+     * @param theta Theta in degrees
+     */
     public void turnTo(double theta) {
         isTurning = true;
         double currTheta = odometer.getThetaInDegrees(); // in 360°
@@ -181,7 +196,7 @@ public class Navigation {
     } // end turnTo()
 
     /**
-    * @returns <code>true</code> if the robot is either Navigating or Turning
+    * @return <code>true</code> if the robot is either Navigating or Turning
     */
     public boolean isNavigating(){
         return isTurning || isTraveling;
@@ -191,7 +206,7 @@ public class Navigation {
     * Convert to wheel rotations based on the wheel radius and travel distance
     * @param radius Wheel radius of the regular EV3 wheels
     * @param distance Desired distance to travel
-    * @returns Number of degrees that motor must rotate to travel the required distance
+    * @return Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertDistance(double radius, double distance) {
         return (int) ((180.0 * distance) / (Math.PI * radius));
@@ -202,7 +217,7 @@ public class Navigation {
     * @param radius Wheel radius of the regular EV3 wheels
     * @param width Width of the robot (TRACK)
     * @param angle Angle that defines the distance
-    * @returns Number of degrees that motor must rotate to travel the required distance
+    * @return Number of degrees that motor must rotate to travel the required distance
     */
     private static int convertAngle(double radius, double width, double angle) {
         return convertDistance(radius, Math.PI * width * angle / 360.0);
@@ -250,9 +265,15 @@ public class Navigation {
         setSpeed(forwardSpeed);
         setAcceleration(forwardAcceleration);
         if(distance>=0) {
+            if(Main.navigationCorrection)
+                rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, 1), false);
+            
             leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
             rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
         } else {
+            if(Main.navigationCorrection)
+                rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, 1), false);
+            
             leftMotor.rotate(-convertDistance(WHEEL_RADIUS, Math.abs(distance)), true);
             rightMotor.rotate(-convertDistance(WHEEL_RADIUS, Math.abs(distance)), false);
         }

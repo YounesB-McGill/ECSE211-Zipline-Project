@@ -14,41 +14,48 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class Odometer implements Runnable {
     // robot position
-    private double x;
-    private double y;
-    private double theta;
-    private double xTh;
-    private double yTh;
-    private double thetaTh;
-    private double[] last10thetas;
-    private double deltaL;
+    /**Current <i>x</i> coordinate of the robot*/private double x;
+    /**Current <i>y</i> coordinate of the robot*/private double y;
+    /**Current <i>theta</i> of the robot, in radians, using a scale from 0 to 2 pi*/private double theta;
+    /**Theoretical <i>x</i> coordinate of the robot*/private double xTh;
+    /**Theoretical <i>y</i> coordinate of the robot*/private double yTh;
+    /**Theoretical <i>theta</i> of the robot, in radians, using a scale from 0 to 2 pi*/private double thetaTh;
+    /**Array of last 10 thetas, used to determine the robot's turning state*/private double[] last10thetas;
+    /*private double deltaL;
     private double deltaR;
     private double deltaTheta;
-    private double deltaD;
-    private int leftMotorTachoCount;
-    private int rightMotorTachoCount;
-    private int state;
-    private boolean isTurning;
+    private double deltaD;*/
+    /**Tachometer reading of the left motor*/private int leftMotorTachoCount;
+    /**Tachometer reading of the right motor*/private int rightMotorTachoCount;
+    /**State of the robot*/private int state;
+    /**<b><code>true</code></b> if the robot is turning*/private boolean isTurning;
+    /**Local version of <b><code>Main</code></b> global constant*/
     private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
+    /**Local version of <b><code>Main</code></b> global constant*/
     private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
 
     /**odometer update period, in ms */private static final long ODOMETER_PERIOD = 35; 
+    /**Local version of <b><code>Main</code></b> global constant*/
     private static double WHEEL_RADIUS = Main.WHEEL_RADIUS;
+    /**Constant to reduce error in theta*/
     private static final double THETA_OFFSET = 362d/365; // reduce error in theta. d is for double
+    /**Threshold that robot must turn before entering Turning state, in degrees*/
     private static final double TURNING_THRESHOLD = 5;
+    /**Local version of <b><code>Main</code></b> global constant*/
     private static double TRACK = Main.TRACK;
+    /**Local version of <b><code>Main</code></b> global constant*/
     private static final double TILE = Main.TILE;
     
-    public static int lastTachoL;           // Tacho L at last sample
-    public static int lastTachoR;           // Tacho R at last sample 
-    public static int nowTachoL;            // Current tacho L
-    public static int nowTachoR;            // Current tacho R
+    /**Tacho L at last sample*/public static int lastTachoL;
+    /**Tacho R at last sample*/public static int lastTachoR;
+    /**Current tacho L*/public static int nowTachoL;
+    /**Current tacho R*/public static int nowTachoR;
 
 
     /** lock object for mutual exclusion */private Object lock; 
     /**Used to run the Odometer as a <b><code>Thread</code></b>*/public Thread runner; 
 
-    // default constructor
+    /**Default constructor*/
     public Odometer() {
         this.x = 0.0;
         this.y = 0.0;
@@ -165,9 +172,9 @@ public class Odometer implements Runnable {
     }   
 
     /**
-     * Get the current robot position
-     * @param position
-     * @param update
+     * Get the current robot position in cm and radians
+     * @param position The current position of the robot
+     * @param update Boolean array that controls which variables to update
      */
     public void getPosition(double[] position, boolean[] update) {
         // ensure that the values don't change while the odometer is running
@@ -178,6 +185,13 @@ public class Odometer implements Runnable {
         }
     }
     
+    /**
+     * Get the current robot position in units suitable for displaying and debugging.
+     * <i>x</i> and <i>y</i> are in units of Tile length.
+     * Theta is in degrees.
+     * @param position The current position of the robot
+     * @param update Boolean array that controls which variables to update
+     */
     public void getPositionForDisplay(double[] position, boolean[] update) {
         // ensure that the values don't change while the odometer is running
         //getPosition(position, update);
@@ -188,48 +202,72 @@ public class Odometer implements Runnable {
         }
     }
 
+    /**
+     * @return The current <i>x</i> coordinate of the robot
+     */
     public double getX() {
         double result;
         synchronized (lock) { result = x; }
         return result;
     }
 
+    /**
+     * @return The current <i>y</i> coordinate of the robot
+     */
     public double getY() {
         double result;
         synchronized (lock) { result = y; }
         return result;
     }
 
+    /**
+     * @return The current theta of the robot, in radians
+     */
     public double getTheta() {
         double result;
         synchronized (lock) { result = theta; }
         return result;
     }
     
+    /**
+     * @return The theoretical <i>x</i> coordinate of the robot
+     */
     public double getXTh() {
         double result;
         synchronized (lock) { result = xTh; }
         return result;
     }
 
+    /**
+     * @return The theoretical <i>y</i> coordinate of the robot
+     */
     public double getYTh() {
         double result;
         synchronized (lock) { result = yTh; }
         return result;
     }
 
+    /**
+     * @return The theoretical theta of the robot, in radians
+     */
     public double getThetaTh() {
         double result;
         synchronized (lock) { result = thetaTh; }
         return result;
     }
     
+    /**
+     * @return <b><code>double</code></b> array of last 10 thetas, in degrees
+     */
     public double[] getLast10Thetas() {
         double[] result;
         synchronized (lock) { result = last10thetas; }
         return result;
     }    
     
+    /**
+     * @return The current theta of the robot, in degrees using the [0-360<sup>o</sup>) scale
+     */
     public double getThetaInDegrees() {
         double result;
         synchronized (lock) {
@@ -238,6 +276,9 @@ public class Odometer implements Runnable {
         return result;
     }
     
+    /**
+     * @return The theoretical theta of the robot, in degrees using the [0-360<sup>o</sup>) scale
+     */
     public double getThetaThInDegrees() {
         double result;
         synchronized (lock) {
@@ -246,6 +287,9 @@ public class Odometer implements Runnable {
         return result;
     }
     
+    /**
+     * @return <b><code>true</code></b> if the robot is turning
+     */
     public boolean getIsTurning() { 
         boolean result;
         synchronized (lock) { result = isTurning; }

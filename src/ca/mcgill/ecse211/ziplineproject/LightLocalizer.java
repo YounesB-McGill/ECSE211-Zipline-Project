@@ -8,6 +8,7 @@ import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
+import ca.mcgill.ecse211.ziplineproject.Main.TeamColor;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 
@@ -28,6 +29,10 @@ public final class LightLocalizer {
     private static final double TILE = Main.TILE;
     private double intensity;
     private int startCorner;// = Main.startCorner; TODO
+    private static int x0;
+    private static int y0;
+    private static int xc;
+    private static int yc; 
 
     private EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
     private EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
@@ -50,6 +55,7 @@ public final class LightLocalizer {
         this.lightIntensity = colorSensor.getRedMode();
         this.sampleSize = lightIntensity.sampleSize();
         this.csData = new float[sampleSize];
+        setZiplineCoordinates();
     }
 
     /**
@@ -66,7 +72,7 @@ public final class LightLocalizer {
             stopMotor();
         }
         else if(type==1){
-            doLightLocalization(Main.zo_g_x, Main.zo_g_y); // TODO Change according to starting corner
+            doLightLocalization(x0, y0); // TODO Change according to starting corner
             stopMotor();
         }
         else if(type==2){
@@ -82,11 +88,38 @@ public final class LightLocalizer {
             stopMotor();
             driveForward(-8,false);
             traverseMotor.stop();
-            // TODO Calculate other end of zipline
-            doLightLocalization(Main.zo_r_x, Main.zo_r_y); // TODO Change according to starting corner
+            
+            /* Other end of the zipline * can be calculated using trigonometry ☺ 
+             * 
+             *  unknownX = (5*TILE/p)*dx
+             *  
+             *     * ____
+             *       \   |
+             *  Zipln \  | unknownY = (5*TILE/p)*dy
+             *  4*TILE \ |
+             *          \|
+             *           |\ p = √(dx²+dy²)
+             *        dy |_\
+             *            dx
+             */
+            double unknownX = Main.zc_g_x + 5*(Main.zc_g_x-Main.zo_g_x)/
+                    Math.sqrt((Main.zc_g_x-Main.zo_g_x) * (Main.zc_g_x-Main.zo_g_x)
+                            +(Main.zc_g_x-Main.zo_g_x) * (Main.zc_g_x-Main.zo_g_x)); // In TILE, not cm
+            
+            double unknownY = Main.zc_g_y + 5*(Main.zc_g_y-Main.zo_g_y)/
+                    Math.sqrt((Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y)
+                            +(Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y)); // In TILE, not cm
+            
+            /* Terenary operator, similar to a spreadsheet IF statement. Syntax:
+             * result = Condition? resultIfTrue : resultIfFalse 
+             * We are performing this operation to avoid truncating too much when casting to an int,
+             * so for example 3.99 will be 4 and not 3*/
+            int redApproachX = (Math.abs(unknownX-Math.floor(unknownX))<0.5)? (int)unknownX: (int)unknownX+1;
+            int redApproachY = (Math.abs(unknownY-Math.floor(unknownY))<0.5)? (int)unknownY: (int)unknownY+1;
+            doLightLocalization(redApproachX, redApproachY); 
             stopMotor();
-            odometer.setX(Main.zo_r_x*TILE);
-            odometer.setY(Main.zo_r_y*TILE);
+            odometer.setX(redApproachX*TILE);
+            odometer.setY(redApproachY*TILE);
             Sound.beepSequence();
             Sound.beepSequence();
             
@@ -606,6 +639,20 @@ public final class LightLocalizer {
      */
     private static int convertAngle(double radius, double width, double angle) {
         return convertDistance(radius, Math.PI * width * angle / 360.0);
+    }
+    
+    private static void setZiplineCoordinates() {
+        if(Main.teamColor.equals(TeamColor.GREEN)) {
+            x0 = Main.zo_g_x;
+            y0 = Main.zo_g_y;
+            xc = Main.zc_g_x;
+            yc = Main.zc_g_y;
+        } else { // RED
+            x0 = Main.zo_r_x;
+            y0 = Main.zo_r_y;
+            xc = Main.zc_r_x;
+            yc = Main.zc_r_y;
+        }
     }
 
 }

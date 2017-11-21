@@ -45,15 +45,18 @@ import lejos.robotics.SampleProvider;
  * 
  * @author Younes Boubekeur 
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("rawtypes") // From supplied Wi-Fi code
 public class Main {
     
     /**The IP address of the computer running the server application*/
-    private static final String SERVER_IP = "192.168.2.36"; // TA or Prof: 192.168.2.3
+    private static final String SERVER_IP = "192.168.2.14"; // TA or Prof: 192.168.2.3 // I'm 14 
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
-    // Enable/disable printing of debug info from the WiFi class
+    /** Enable/disable printing of debug info from the WiFi class*/
     private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
+    
+    /** Enable/disable experimental Navigation corrcetion*/
+    public static boolean navigationCorrection = false;
 
     /**The radius of the robot tire, 2.13 cm.*/public static final double WHEEL_RADIUS = 2.115; // was 2.13
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
@@ -61,7 +64,7 @@ public class Main {
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 280;
-    /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 135;
+    /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 175;
     /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 90;
     /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 100;
     
@@ -84,8 +87,8 @@ public class Main {
     /**The <i>y</i> coordinate of the Red Zone zip line endpoint*/public static int zc_r_y;
     /**The <i>x</i> coordinate of the Red Zone zip line approach*/public static int zo_r_x; // Was xd
     /**The <i>y</i> coordinate of the Red Zone zip line approach*/public static int zo_r_y; // Was yd
-    /**The <i>x</i> coordinate of the Red Zone zip line endpoint*/public static int zc_g_x; // Was xc
-    /**The <i>y</i> coordinate of the Red Zone zip line endpoint*/public static int zc_g_y; // Was yc
+    /**The <i>x</i> coordinate of the Green Zone zip line endpoint*/public static int zc_g_x; // Was xc
+    /**The <i>y</i> coordinate of the Green Zone zip line endpoint*/public static int zc_g_y; // Was yc
     /**The <i>x</i> coordinate of the Green Zone zip line approach*/public static int zo_g_x; // Was x0
     /**The <i>y</i> coordinate of the Green Zone zip line approach*/public static int zo_g_y; // Was y0
     /**The <i>x</i> coordinate of the lower left hand corner of the horizontal shallow water zone*/
@@ -144,9 +147,9 @@ public class Main {
      */
     public static UARTSensor[] sensors = new UARTSensor[] {
             new EV3UltrasonicSensor(LocalEV3.get().getPort("S1")),
-            new EV3ColorSensor(LocalEV3.get().getPort("S4")),
-            // TODO Second ColorSensor for flag capture
-            // new EV3ColorSensor(LocalEV3.get().getPort("S?"))
+            /*null,*/new EV3ColorSensor(LocalEV3.get().getPort("S4")),
+            // Second ColorSensor for flag capture
+            //new EV3ColorSensor(LocalEV3.get().getPort("S4")) // TODO Change S4 to correct port
     };
     
     /**Ultrasonic sensor used for localization and obstacle avoidance*/
@@ -154,7 +157,7 @@ public class Main {
     /**Color sensor used to detect gridlines*/
     public static final EV3ColorSensor cSensor = (EV3ColorSensor) sensors[1];
     /**Color sensor used to recognize the flag*/
-    public static final EV3ColorSensor flagSensor = null; //TODO (EV3ColorSensor) sensors[2];
+    public static final EV3ColorSensor flagSensor = null;// (EV3ColorSensor) sensors[2];
     
     /**EV3 Hardware LCD display*/
     public static TextLCD textLCD = LocalEV3.get().getTextLCD();
@@ -180,7 +183,7 @@ public class Main {
     
     /**
      * Main entry point for the game logic
-     * @param {String[]} args
+     * @param args
      */
     @SuppressWarnings("static-access")
     public static void main(String[] args) {
@@ -188,12 +191,25 @@ public class Main {
         Sound.beepSequenceUp();
         // Get Wi-Fi parameters from the server
         getWiFiParameters();
+        
+        // Start odometer and display runnables here
+        odometer.start();
+        display.start();
+        
+        
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
         //TestNavigation.testNavigation();
-        TestLightLocalizer.testLightLocalizer();
+        //TestUltrasonicLocalizer.testUltrasonicLocalizer();
+        //TestLightLocalizer.testLightLocalizer();
         //TestTraverseZipline.testTraverseZipline();
+        //TestFlagCapture.testFlagCapture();
+        
+        
+        
+        // To confirm control returns to main
+        Sound.beepSequenceUp();
         
         while (Button.waitForAnyPress() != Button.ID_ESCAPE)
             ; // do nothing

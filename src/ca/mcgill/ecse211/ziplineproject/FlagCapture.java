@@ -42,11 +42,16 @@ public class FlagCapture {
     
     /**
      * Execute the flag capture logic by navigating to the search zone, detecting flags, and indicating capture
+     * 
+     * <p>When navigating to the seach zone, the robot must handle cases where there could be a wall or river,
+     * in which case it will follow a modified path. After we set the search zone coordinates
+     * </p>
      */
     public static void doFlagCapture() { // Instead of a start method
              
         setTargetFlag();
         setSearchZoneCoordinates();
+        
         navigation.travelTo(searchZone_ur_x, searchZone_ur_y); // or (searchZone_ll_x, searchZone_ll_y)
         // TODO Use navigation to go around search area, and then call detectFlag() every once in awhile
         while(!flagCaptured) {
@@ -88,7 +93,7 @@ public class FlagCapture {
     public static void setTargetFlag() {
         // Set the targetFlag global variable to the Wi-Fi parameter
         if(teamColor.equals(TeamColor.GREEN)) {
-            targetFlag = Main.or; // TODO Confirm this
+            targetFlag = Main.or; 
         } else {
             targetFlag = Main.og;
         }

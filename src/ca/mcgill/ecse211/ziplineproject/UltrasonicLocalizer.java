@@ -1,231 +1,137 @@
 package ca.mcgill.ecse211.ziplineproject;
 
-import lejos.hardware.Sound;
-import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.SensorModes;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.robotics.SampleProvider;
+import lejos.hardware.Sound;
 
 /**
  * This class contains the ultrasonic localization logic.
  * 
- * @author Paarth Kalia
+ * @author Mahad Khan
  *
  */
 public class UltrasonicLocalizer {
-    private static final int WALL_DIST = 45;
-    private static final int DISTANCE_CAP = 60;
-    private static final int LARGE_ANGLE = 225-180;
-    private static final int SMALL_ANGLE = 45+180;
-    private static final int ORIGIN = 80;
-    public static final double ROTATION_SPEED = 125;
+    /**The ultrasonic sensor*/private static EV3UltrasonicSensor usSensor = Main.usSensor;
+    /**The left motor*/private static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
+    /**The right motor*/private static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
+    /**The speed at which the motors rotate while turning in-place, in degrees/second*/
+    private static final int ROTATION_SPEED = 100;
+    /**Threshold for distance between the US sensor and detected wall*/
+    private static final int DISTANCE_THRESHOLD = 60;
+    /**Constant used for noise filtering*/private static final int NOISE_FILTER = 20;
+    /**Local version of Odometer object*/private static Odometer odometer = Main.odometer;
+    /**The type of US localization used in this instance*/private static LocalizationType localizationType;
+    /**The distance between the US sensor and an obstacle, in cm*/private static int distance;
+    /**Number of times a bad US reading occured, used for filtering US data*/private static int count;
+    /**Array containing US data readings*/private static float[] usData = new float[] {0};
     
-    private static final Odometer odometer = Main.odometer;
-    private static final Navigation navigation = Main.navigation;
-    
-    public static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
-    public static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
-    
-    private static EV3UltrasonicSensor usSensor = Main.usSensor;
-
-    private static LocalizationType localType;
-    public static enum LocalizationType { RISING_EDGE, FALLING_EDGE };
-    
-    private static int distance;
-    private static int count;
-    private static float[] usData = new float[] {0};
-    
+    /**When <b><code>true</code></b>, print debugging information to the console*/
     private static boolean printToConsole = Main.printToConsole;
     
+    /**The type of US localization to use, either rising edge or falling edge*/
+    public static enum LocalizationType { RISING_EDGE, FALLING_EDGE };
+
     public UltrasonicLocalizer(LocalizationType type){
-        localType = type;
+        localizationType = type;
     }
+    
     /**
      * Do the ultrasonic localization
      */
-    @SuppressWarnings("static-access") // Need to access global variable
     public static void doLocalization(){
-        double[] pos = new double[3];
-        double angle1, angle2, deltAngle;
+        if(printToConsole) System.out.println("Entered doLocalization()");
+        if(localizationType.equals(LocalizationType.RISING_EDGE)) risingEdge();
+        else fallingEdge();
+    }
 
-        //set speed to the rotation speed only once
-        navigation.setSpeed((float) ROTATION_SPEED);
-        //draw usData
-        if(printToConsole) System.out.println(getData());
+    /**
+     * Perform falling edge ultrasonic localization, which works by rotating in-place until a wall is seen
+     */
+    public static void fallingEdge() {
+        double alpha = 0;
+        double beta = 0;
+        double deltaTheta = 0;
+
         
-        if(localType==LocalizationType.FALLING_EDGE){ //this means we have to rotate until wall is seen
-            while(getData()<DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn clockwise
-                clockwise();
-            }
-            //stop the robot
-            stopMotors();
-            
-            try{Thread.sleep(500);} catch(InterruptedException e){} //rotate until wall is seen, note the angle
-            
-            while(getData()==DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                //turn clockwise
-                clockwise();
-            }
-            stopMotors();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle1 = odometer.getThetaInDegrees();
-            //draw the angle
-            if(printToConsole) System.out.println("Angle1 is: "+angle1);
-            //draw usData
-            if(printToConsole) System.out.println(getData());
-            while(getData() < DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn counterclockwise
-                counterclockwise();
-            }
-            stopMotors();
-            //rotate until wall is seen, note angle 
-            while(getData() == DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn counterclockwise
-                counterclockwise();
-            }
-            stopMotors();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle2 = odometer.getThetaInDegrees();
-            //draw angle
-            if(printToConsole) System.out.println("Angle2 is: "+angle2);
-            //draw usData
-            if(printToConsole) System.out.println(getData());
-            
-            if(Math.abs(angle1)<Math.abs(angle2)){                                          
-                //since angle1 is clockwise from angle2, average of angles right of angle2 is 45 deg
-                deltAngle = LARGE_ANGLE-((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);}catch(InterruptedException e){}
-                // TODO Set Odometer here and change turnTo accordingly
-                navigation.turnTo(ORIGIN-180);
-                odometer.setTheta(0);
-            }
-            else{
-                deltAngle = SMALL_ANGLE+((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);}
-                catch(InterruptedException e){}
-                navigation.turnTo(ORIGIN-90);
-                odometer.setTheta(0);
-            }
-            //update position --> odometer.gettheta+deltAngle
-            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
-                    new boolean[] { true, true, true });*/
-            
-            
+        while (getData() < DISTANCE_THRESHOLD) {
+            rotateClockwise();
         }
+
+        while (getData() > DISTANCE_THRESHOLD - NOISE_FILTER) {
+            rotateClockwise();
+        }
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+
+        alpha = odometer.getThetaInDegrees();
+        Sound.beep();
+
+        while (getData() < DISTANCE_THRESHOLD) {
+            rotateCounterClockwise();
+        }
+
+        while (getData() > DISTANCE_THRESHOLD - NOISE_FILTER) {
+            rotateCounterClockwise();
+        }
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        beta = odometer.getThetaInDegrees();
+        Sound.beep();
+        leftMotor.stop(true);
+        rightMotor.stop(true);
+
+        deltaTheta = headingToBe(alpha, beta);
+        Sound.beepSequence();
+
+        odometer.setTheta(odometer.getTheta() + Math.toRadians(deltaTheta));
         
-        else{ //RISING_EDGE
-            while (getData() == DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                //set RotationSpeed
-                
-                // turn clockwise
-                clockwise();
-            }
-            //keep rotating until the robot sees no wall, then latch the angle
-            while (getData() < DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn clockwise
-                clockwise();
-            }
-            try {Thread.sleep(500);}catch (InterruptedException e) {}
-            stopMotors();
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle1=odometer.getThetaInDegrees();
-            //draw angle
-            if(printToConsole) System.out.println("Angle1 is: "+angle1);
-            //draw usData
-            if(printToConsole) System.out.println(getData());
-            
-            // switch direction and wait until it sees a wall
-            while (getData() == DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn counterclockwise
-                counterclockwise();
-            }
-            
-            // rotate until no wall is seen, note angle
-            while (getData() < DISTANCE_CAP){
-                //draw usData
-                if(printToConsole) System.out.println(getData());
-                // turn counterclockwise
-                counterclockwise();
-            }
-            stopMotors();
-            
-            //make sound to signal change
-            Sound.playNote(Sound.PIANO, 700, 250);
-            
-            angle2=odometer.getThetaInDegrees();
-            //draw angle
-            if(printToConsole) System.out.println("Angle2 is: "+angle2);
-            //draw usData
-            if(printToConsole) System.out.println(getData());
+        if(printToConsole) System.out.println("alpha: "+alpha+", beta: "+beta+", delta: "+deltaTheta); 
 
-            if(Math.abs(angle1)<Math.abs(angle2)){
-                deltAngle = LARGE_ANGLE - ((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);} 
-                catch (InterruptedException e) {}
-                navigation.turnTo(ORIGIN+10);
-                odometer.setTheta(0);
-            } else if(Math.abs(angle1)>Math.abs(angle2)) {
-                deltAngle = SMALL_ANGLE + ((angle1+Math.abs(angle2))/2);
-                try {Thread.sleep(500);}catch (InterruptedException e) {}
-                navigation.turnTo(-ORIGIN-90);
-                odometer.setTheta(0);
-            }
-            //update position --> odometer.gettheta+deltAngle
-            /*odometer.setPosition(new double[] { odometer.getX(), odometer.getY(), odometer.getTheta() + deltAngle },
-                    new boolean[] { true, true, true });*/
-            Sound.playNote(Sound.PIANO, 700, 250);
+    }
 
+    /**
+     * Perform rising edge ultrasonic localization, which works by rotating in-place until no wall is seen
+     */
+    public static void risingEdge() {
+        double alpha = 0;
+        double beta = 0;
+        double deltaTheta = 0;
+        while (getData() > NOISE_FILTER) {
+            rotateCounterClockwise();
         }
-    }
-    
-    
-    /**
-     * Stop the left and right Motors
-     */
-    public static void stopMotors() {
-        leftMotor.stop();
-        rightMotor.stop();
-    }
-    
-    /**
-     * Make robot rotate clockwise
-     */
-    public static void clockwise() {
-        leftMotor.forward();
-        rightMotor.backward();
+        Sound.buzz();
+
+        while (getData() < DISTANCE_THRESHOLD) {
+            rotateCounterClockwise();
+        }
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        alpha = odometer.getThetaInDegrees();
+        Sound.beep();
+
+        while (getData() > NOISE_FILTER) {
+            rotateClockwise();
+        }
+        Sound.buzz();
+
+        while (getData() < DISTANCE_THRESHOLD) {
+            rotateClockwise();
+        }
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        beta = odometer.getThetaInDegrees();
+        Sound.beep();
+
+        deltaTheta = headingToBe(alpha, beta);
+        Sound.beepSequence();
+        leftMotor.stop(true);
+        rightMotor.stop(true);
+        odometer.setTheta(odometer.getTheta() + Math.toRadians(deltaTheta));
+        
+        if(printToConsole) System.out.println("alpha: "+alpha+", beta: "+beta+", delta: "+deltaTheta); 
+
     }
 
-    /**
-     * Make robot rotate counterclockwise
-     */
-    public static void counterclockwise() {
-        leftMotor.backward();
-        rightMotor.forward();
-    }
-    
     /**
      * 
      * @return Distance from the US sensor in cm
@@ -238,12 +144,12 @@ public class UltrasonicLocalizer {
         usSensor.getDistanceMode().fetchSample(usData, 0);
         dist = (int) (usData[0]*100);
                                                                             
-        if(dist>DISTANCE_CAP && count<=3){ //filter for false positives or negatives
+        if(dist>DISTANCE_THRESHOLD && count<=3){ //filter for false positives or negatives
             count++; 
             return distance;
         }
-        else if(dist>DISTANCE_CAP && count>3){
-            return DISTANCE_CAP;
+        else if(dist>DISTANCE_THRESHOLD && count>3){
+            return DISTANCE_THRESHOLD;
         }
         else{
             count=0;
@@ -252,5 +158,45 @@ public class UltrasonicLocalizer {
         }
     }
     
+    /**
+     * Make robot rotate clockwise
+     */
+    public static void rotateClockwise() {
+        leftMotor.setAcceleration(Main.FWD_ACC);
+        rightMotor.setAcceleration(Main.FWD_ACC);
+        leftMotor.setSpeed(ROTATION_SPEED);
+        rightMotor.setSpeed(ROTATION_SPEED);
+        leftMotor.backward();
+        rightMotor.forward();
+    }
+
+    /**
+     * Make robot rotate counterclockwise
+     */
+    public static void rotateCounterClockwise() {
+        leftMotor.setAcceleration(Main.FWD_ACC);
+        rightMotor.setAcceleration(Main.FWD_ACC);
+        leftMotor.setSpeed(ROTATION_SPEED);
+        rightMotor.setSpeed(ROTATION_SPEED);
+        leftMotor.forward();
+        rightMotor.backward();
+    }
+
+    /**
+     * Calculate the difference in headings in order to determine the robot orientation
+     * 
+     * @param alpha The first angle that was detected, in degrees
+     * @param beta The second detected angle, on the other wall, in degrees 
+     * @return The actual difference between the two angles, in degrees
+     */
+    public static double headingToBe(double alpha, double beta) {
+        double deltaTheta = 0;
+        if (alpha < beta) {
+            deltaTheta = 45 - ((alpha + beta) / 2);
+        } else {
+            deltaTheta = 225 - ((alpha + beta) / 2);
+        }
+        return deltaTheta;
+    }
 
 }
