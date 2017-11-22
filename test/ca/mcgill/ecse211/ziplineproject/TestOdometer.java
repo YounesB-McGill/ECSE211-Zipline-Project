@@ -79,9 +79,7 @@ public class TestOdometer{
             System.out.println();      
         }*/
         
-        // Start odometer and display
-        odometer.start();
-        display.start();
+        // Odometer and display now started in Main
         
         // Set odometer to start at (1,1)
         odometer.setX(1*TILE); odometer.setY(1*TILE);

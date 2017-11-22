@@ -14,7 +14,6 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
  */
 public class Test{
     // Constants:
-    // TODO Add any missing constants
     private static final double TILE = Main.TILE;
     private static final double WHEEL_RADIUS = Main.WHEEL_RADIUS;
     private static final double TRACK = Main.TRACK;
@@ -33,25 +32,6 @@ public class Test{
     private static Odometer odometer = Main.odometer;
     private static Navigation navigation = Main.navigation;
     private static Display display = Main.display;
-    
-    // TODO Variables used for testing:
-    /* ... */
-    
-    
-    
-   
-    
-    
-    
-
-    
-
-    
-
-    
-
-    
-    
 
     
 }
