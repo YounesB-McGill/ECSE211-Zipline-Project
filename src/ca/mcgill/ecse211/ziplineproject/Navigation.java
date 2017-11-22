@@ -59,16 +59,7 @@ public class Navigation {
         lock = new Object();
     }
     
-    public void run(){
-      
-        for(int i =0; i <= points.length; i++){
-            // Remember last point before obstacle is encountered
-            setXBefore((int) points[version-1][i][0]);
-            setYBefore((int) points[version-1][i][1]);
-            
-            travelTo( points[version-1][i][0], points[version-1][i][1] );
-        }
-    }
+    // run() removed since Navigation is no longer run as a Thread
 
     /**
      * Travel to specified point
@@ -194,6 +185,35 @@ public class Navigation {
 
         isTurning = false;
     } // end turnTo()
+    
+    /**
+     * Turn to a certain point (<i>x</i>,<i>y</i>) but do not travel to it yet. This method uses the same logic
+     * as {@link Navigation#travelTo()}.
+     * @param x <i>x</i> coordinate based on gridlines
+     * @param y <i>y</i> coordinate based on gridlines
+     */
+    public void pointTo(double x, double y) {
+        isTurning = true;
+        // Convert to cm
+        x = x * TILE;
+        y = y * TILE;
+         
+        // getting the current position of robot
+        double currX = odometer.getX(), currY = odometer.getY();
+        double deltaX = x - currX, deltaY = y - currY;
+         
+        // getting the theta of the destination, converting to degrees
+        double destTheta = Math.atan2(deltaX, deltaY) * 180 / Math.PI;
+        
+        // turn to destination theta
+        turnTo(destTheta);
+        
+        try {Thread.sleep(SLEEPINT);} catch (InterruptedException e) {}
+         
+        // Don't travel to destination
+         
+        isTurning = false;
+    } // end pointTo()
 
     /**
     * @return <code>true</code> if the robot is either Navigating or Turning
@@ -208,7 +228,7 @@ public class Navigation {
     * @param distance Desired distance to travel
     * @return Number of degrees that motor must rotate to travel the required distance
     */
-    private static int convertDistance(double radius, double distance) {
+    public static int convertDistance(double radius, double distance) {
         return (int) ((180.0 * distance) / (Math.PI * radius));
     }
     
@@ -219,7 +239,7 @@ public class Navigation {
     * @param angle Angle that defines the distance
     * @return Number of degrees that motor must rotate to travel the required distance
     */
-    private static int convertAngle(double radius, double width, double angle) {
+    public static int convertAngle(double radius, double width, double angle) {
         return convertDistance(radius, Math.PI * width * angle / 360.0);
     }
 

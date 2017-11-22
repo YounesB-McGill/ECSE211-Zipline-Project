@@ -27,8 +27,10 @@ public final class LightLocalizer {
     private static final int FORWARD_DISTANCE = 15;
     private static final double sensorDis = -11; // -4
     private static final double TILE = Main.TILE;
+    private static final double BOARD_SIZE = Main.BOARD_SIZE;
+    
     private double intensity;
-    private int startCorner;// = Main.startCorner; TODO
+    private static int startCorner;
     private static int x0;
     private static int y0;
     private static int xc;
@@ -56,6 +58,7 @@ public final class LightLocalizer {
         this.sampleSize = lightIntensity.sampleSize();
         this.csData = new float[sampleSize];
         setZiplineCoordinates();
+        setStartCorner();
     }
 
     /**
@@ -77,11 +80,11 @@ public final class LightLocalizer {
         }
         else if(type==2){
             driveForward();
-            while(true){
-            if (hitGridLine()) {
-                Sound.beep();
-                break;
-            }
+            while (true) {
+                if (hitGridLine()) {
+                    Sound.beep();
+                    break;
+                }
             }
             
             // stop the motors
@@ -129,7 +132,7 @@ public final class LightLocalizer {
             stopMotor();
             doLightLocalization(Main.sr_ur_x, Main.sr_ur_y);  // TODO Change according to starting corner
             stopMotor();*/
-        }
+        } // end if(type==2)
     
     }
 
@@ -467,18 +470,18 @@ public final class LightLocalizer {
             odometer.setY(1 * TILE);
         } else if (startCorner == 1) {
             // reset x,y,theta
-            odometer.setX(7 * TILE);
+            odometer.setX((BOARD_SIZE-1) * TILE);
             odometer.setY(1 * TILE);
             odometer.setTheta(Math.PI * 3 / 2);
         } else if (startCorner == 2) {
             // reset x,y,theta
-            odometer.setX(7 * TILE);
-            odometer.setY(7 * TILE);
+            odometer.setX((BOARD_SIZE-1) * TILE);
+            odometer.setY((BOARD_SIZE-1) * TILE);
             odometer.setTheta(Math.PI);
         } else if (startCorner == 3) {
             // reset x,y,theta
             odometer.setX(1 * TILE);
-            odometer.setY(7 * TILE);
+            odometer.setY((BOARD_SIZE-1) * TILE);
             odometer.setTheta(Math.PI / 2);
         }
 
@@ -652,6 +655,14 @@ public final class LightLocalizer {
             y0 = Main.zo_r_y;
             xc = Main.zc_r_x;
             yc = Main.zc_r_y;
+        }
+    }
+    
+    private static void setStartCorner() {
+        if(Main.teamColor.equals(TeamColor.GREEN)) {
+            startCorner = 1;
+        } else { // RED
+            startCorner = 3;
         }
     }
 

@@ -49,7 +49,7 @@ import lejos.robotics.SampleProvider;
 public class Main {
     
     /**The IP address of the computer running the server application*/
-    private static final String SERVER_IP = "192.168.2.14"; // TA or Prof: 192.168.2.3 // I'm 14 
+    private static final String SERVER_IP = "192.168.2.16"; // TA or Prof: 192.168.2.3 // I'm 16
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
     /** Enable/disable printing of debug info from the WiFi class*/
@@ -62,6 +62,8 @@ public class Main {
     /**The width of the robot, as measured between the left and right wheels, 14.80 cm.*/ 
     public static final double TRACK = 14.68; // was 14.68, 14.80, 15.0, 15.2.
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
+    /**The dimension of the playing field, in Tile lengths. 8 in beta demo and 12 in final competition*/
+    public static final double BOARD_SIZE = 8;
     
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 280;
     /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 175;
@@ -196,7 +198,7 @@ public class Main {
         odometer.start();
         display.start();
         
-        
+        System.out.println("Green team:" + greenTeam);
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
