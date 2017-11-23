@@ -15,7 +15,7 @@ public class UltrasonicLocalizer {
     /**The left motor*/private static EV3LargeRegulatedMotor leftMotor = Main.leftMotor;
     /**The right motor*/private static EV3LargeRegulatedMotor rightMotor = Main.rightMotor;
     /**The speed at which the motors rotate while turning in-place, in degrees/second*/
-    private static final int ROTATION_SPEED = 100;
+    private static final int ROTATION_SPEED = Main.ROTATE_SPEED;
     /**Threshold for distance between the US sensor and detected wall*/
     private static final int DISTANCE_THRESHOLD = 60;
     /**Constant used for noise filtering*/private static final int NOISE_FILTER = 20;

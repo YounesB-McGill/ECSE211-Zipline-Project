@@ -23,7 +23,7 @@ public final class LightLocalizer {
     private static double TRACK = Main.TRACK;
     private static final int FORWARD_SPEED = Main.FWD_SPEED;
     private static final int ROTATE_SPEED = Main.ROTATE_SPEED;
-    private static final int ACCE_SPEED = 150;
+    private static final int ACCELERATION = 150;
     private static final int FORWARD_DISTANCE = 15;
     private static final double sensorDis = -11; // -4
     private static final double TILE = Main.TILE;
@@ -173,6 +173,8 @@ public final class LightLocalizer {
      * @param y <i>y</i> coordinate
      */
     public void doLightLocalization(int x, int y) {
+    	 leftMotor.setAcceleration(50);
+         rightMotor.setAcceleration(50);
             // turn 360 degrees
             clockwise(360, true);
 
@@ -196,6 +198,7 @@ public final class LightLocalizer {
                     //the robot locate at the center of a block
                     //so we drive forward until we find a grid line
                     driveForward();
+                    
                     while (true) {
                         if (hitGridLine()) {            
                             stopMotor();
@@ -224,7 +227,7 @@ public final class LightLocalizer {
                     double directionAngle = findNewDirection(heading, angle, MinAng);
                     //here turnTo method go to the reverse direction, so I just drive backwards
                     navigation.turnTo(directionAngle);
-                    stopMotor();
+                    //stopMotor();
                     driveForward(-5, false);
                 }
                 stopMotor();
@@ -249,9 +252,9 @@ public final class LightLocalizer {
                 double directionAngle = findNewDirection(heading, angle, MinAng);
                 //here turnTo method go to the reverse direction, so I just drive backwards
                 navigation.turnTo(directionAngle);
-                stopMotor();
+                //stopMotor();
                 driveForward(-10, false);
-                stopMotor();
+                //stopMotor();
                 //recursively call doLightLocalization
                 doLightLocalization(x, y);
                 return;
@@ -271,15 +274,15 @@ public final class LightLocalizer {
             
             // do the localization
             navigation.turnTo(direction1);
-            stopMotor();
+            //stopMotor();
             driveForward(distance1, false);
-            stopMotor();
+           //stopMotor();
             navigation.turnTo(direction2);
-            stopMotor();
+            //stopMotor();
             driveForward(distance2, false);
 
             // stop motor
-            stopMotor();
+            //stopMotor();
             Sound.beepSequenceUp();
 
         
@@ -294,18 +297,20 @@ public final class LightLocalizer {
             // turn 360 degrees
             clockwise(360, true);
 
+            setAcce(2500);
             //when a grid line is detected, 
             //stop and set Theta to the closest direction between 4 directions
-            while (leftMotor.isMoving()) {
-                if (hitGridLine()) {            
+            while (leftMotor.isMoving()&&rightMotor.isMoving()) {
+                if (hitGridLine()) {                               
+                   
                     stopMotor();
-                    Sound.playNote(Sound.PIANO, 600, 300);
                     break;
                 }
             }       
+            Sound.playNote(Sound.PIANO, 600, 300);
             //correction by offset
             counterclockwise(10,false);
-            stopMotor();
+           // stopMotor();
             
             if (!hitGridLine()) {           
                 counterclockwise(5,false);
@@ -496,8 +501,8 @@ public final class LightLocalizer {
      */
     private void driveForward(double distance, boolean condition) {
         setForwardSpeed();
-        leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
-        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
+        leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance*0.6), true);
+        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance*0.6), true);
         if (!condition) {
             leftMotor.waitComplete();
             rightMotor.waitComplete();
@@ -570,18 +575,26 @@ public final class LightLocalizer {
      * Make robot stop
      */
     private void stopMotor() {
-        leftMotor.stop();
+        leftMotor.stop(true);
         rightMotor.stop();
-        leftMotor.waitComplete();
-        rightMotor.waitComplete();
+       
+        
     }
 
     /**
      * Set acceleration of the motors
      */
     private void setAcce() {
-        leftMotor.setAcceleration(ACCE_SPEED);
-        rightMotor.setAcceleration(ACCE_SPEED);
+        leftMotor.setAcceleration(ACCELERATION);
+        rightMotor.setAcceleration(ACCELERATION);
+    }
+    
+    /**
+     * Set acceleration of the motors
+     */
+    private void setAcce(int acceleration) {
+        leftMotor.setAcceleration(acceleration);
+        rightMotor.setAcceleration(acceleration);
     }
 
     /**

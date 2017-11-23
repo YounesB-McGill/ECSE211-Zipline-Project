@@ -49,7 +49,7 @@ import lejos.robotics.SampleProvider;
 public class Main {
     
     /**The IP address of the computer running the server application*/
-    private static final String SERVER_IP = "192.168.2.16"; // TA or Prof: 192.168.2.3 // I'm 16
+    private static final String SERVER_IP = "192.168.2.27"; // TA or Prof: 192.168.2.3 // I'm 16
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
     /** Enable/disable printing of debug info from the WiFi class*/
@@ -65,10 +65,10 @@ public class Main {
     /**The dimension of the playing field, in Tile lengths. 8 in beta demo and 12 in final competition*/
     public static final double BOARD_SIZE = 8;
     
-    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 280;
+    /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 300;
     /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 175;
-    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 90;
-    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 100;
+    /**The speed used by the robot to rotate.*/public static final int ROTATE_SPEED = 200;
+    /**The speed used by the robot to traverse the zipline.*/public static final int TRAVERSE_SPEED = 375;
     
     // Wi-Fi parameters
     /**Red team number*/public static int redTeam;
@@ -198,6 +198,8 @@ public class Main {
         odometer.start();
         display.start();
         
+        setTeamColor();
+        
         System.out.println("Green team:" + greenTeam);
         //startCorner = Display.getStartCornerUI();
         
@@ -207,7 +209,7 @@ public class Main {
         //TestLightLocalizer.testLightLocalizer();
         //TestTraverseZipline.testTraverseZipline();
         //TestFlagCapture.testFlagCapture();
-        
+        IntegrationTest.integrationTest();
         
         
         // To confirm control returns to main
@@ -229,9 +231,11 @@ public class Main {
     /**
      * Sets the team color of the robot based on the information obtained from Wi-Fi
      */
-    public static void setTeamColor(/* TODO Add Wi-Fi parameters here*/) {
-        // TODO After Beta demo, add team color logic here
-        teamColor = TeamColor.GREEN;
+    public static void setTeamColor() {
+    	if(greenTeam == TEAM_NUMBER)
+    		teamColor = TeamColor.GREEN;
+    	else // RED
+    		teamColor = TeamColor.RED;
     }
     
     /**

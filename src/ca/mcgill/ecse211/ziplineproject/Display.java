@@ -75,9 +75,9 @@ public class Display implements Runnable {
             }
             
             if(printToConsole) {
-                System.out.println(formattedDoubleToString(position[0], 2) + "," 
-                             + formattedDoubleToString(position[1], 2) + "," 
-                             + formattedDoubleToString(position[2]*180/Math.PI, 2) + ","
+                System.out.println(formattedDoubleToString(position[0]/Main.TILE, 2) + ", " 
+                             + formattedDoubleToString(position[1]/Main.TILE, 2) + ", " 
+                             + formattedDoubleToString(position[2]*180/Math.PI, 2) + ", "
                              + formattedDoubleToString(LocalEV3.get().getPower().getVoltageMilliVolt(), 2)
             );}
         } // end while(true)

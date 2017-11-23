@@ -131,7 +131,7 @@ public class Navigation {
      */
     public void turnTo(double theta) {
         isTurning = true;
-        double currTheta = odometer.getThetaInDegrees(); // in 360°
+        double currTheta = odometer.getThetaInDegrees(); // in 360Â°
         
         // Convert both thetas to [-180,180) scale
         theta = convertAngleTo180Scale(theta);
@@ -142,7 +142,7 @@ public class Navigation {
         
         double deltaTheta;
         if(theta*currTheta>=0) { // if they're both in the ranges [0,180) or [-180,0)
-            // No discontinuity in either 180° or 360° scale
+            // No discontinuity in either 180Â° or 360Â° scale
             deltaTheta = Math.abs(theta - currTheta);
             if(currTheta>theta) {
                 // Turn left by deltaTheta
@@ -161,21 +161,21 @@ public class Navigation {
             double deltaTheta180 = Math.abs(theta-currTheta);
             double deltaTheta360 = Math.abs(theta360-currTheta360);
             if(deltaTheta180 <= deltaTheta360) {
-                // Use 180° scale
+                // Use 180Â° scale
                 if(currTheta>theta) {
-                    // Turn left by deltaTheta in the 180° scale
+                    // Turn left by deltaTheta in the 180Â° scale
                     turnLeftBy(deltaTheta180);
                 } else {
-                    // Turn right by deltaTheta in the 180° scale
+                    // Turn right by deltaTheta in the 180Â° scale
                     turnRightBy(deltaTheta180);
                 }
             } else {
-                // Use 360° scale
+                // Use 360Â° scale
                 if(currTheta360>theta360) {
-                    // Turn left by deltaTheta in the 360° scale
+                    // Turn left by deltaTheta in the 360Â° scale
                     turnLeftBy(deltaTheta360);
                 } else {
-                    // Turn right by deltaTheta in the 360° scale
+                    // Turn right by deltaTheta in the 360Â° scale
                     turnRightBy(deltaTheta360);
                 }
             }
@@ -448,7 +448,7 @@ public class Navigation {
      * @return The converted angle in the scale [-180,180).
      */
     public static double convertAngleTo180Scale(double angle) {
-        // Wraparound 360°
+        // Wraparound 360Â°
         angle %= 360;
         if(angle>=180) {
             angle -= 360;
