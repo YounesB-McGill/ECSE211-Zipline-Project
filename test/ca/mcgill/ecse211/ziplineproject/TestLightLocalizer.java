@@ -40,9 +40,11 @@ public class TestLightLocalizer {
         // Clear display
         textLCD.clear();
         
-        // Odometer and display now started in Main
+        // Remove this later
+        odometer.start();
+        display.start();
         
-        // Set odometer to start at (1,1,0°)
+        // Set odometer to start at (1,1,0Â°)
         odometer.setX(1*TILE); odometer.setY(1*TILE); odometer.setTheta(0);
         
         /*navigation.travelTo(Main.red_ll_x, Main.red_ll_y); // replace with numbers if no Wi-Fi

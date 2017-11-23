@@ -72,19 +72,19 @@ public class TestNavigation {
         // Clear display
         textLCD.clear();
         
-        // Odometer and display now started in Main
+        // Start odometer and display
+        odometer.start();
+        display.start();
         
-        // Set odometer to start at (1,1,0°)
-        odometer.setX(1*TILE); odometer.setY(1*TILE); odometer.setTheta(0);
+        // Set odometer to start at (1,1)
+        odometer.setX(1*TILE); odometer.setY(1*TILE);
         
         double points[][] = new double[][]{{1,3},{3,3},{3,1},{1,1},{1,3},{2,1},{3,2}};
 
-        /*for(int i = 0; i < points.length; i++) {
+        for(int i = 0; i < points.length; i++) {
             navigation.travelTo(points[i][0], points[i][1]);
-        }*/
+        }
         
-        navigation.travelTo(1, 6);
-
         navigation.turnTo(0);
 
     }

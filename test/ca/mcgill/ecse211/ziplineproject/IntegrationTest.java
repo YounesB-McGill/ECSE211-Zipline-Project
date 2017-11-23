@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.ziplineproject;
 
 import ca.mcgill.ecse211.ziplineproject.Main.TeamColor;
+import ca.mcgill.ecse211.ziplineproject.UltrasonicLocalizer.LocalizationType;
 
 /**
  * Integration test
@@ -16,17 +17,18 @@ public class IntegrationTest {
     /**
      * Integration test. This test contains the entire competition logic
      */
-    public static void integrationTest() {
+    @SuppressWarnings("static-access") // Need to set global variable
+	public static void integrationTest() {
 
         if (teamColor.equals(TeamColor.GREEN)) {
-            UltrasonicLocalizer.doLocalization();
+            new UltrasonicLocalizer(LocalizationType.FALLING_EDGE).doLocalization();
 
             navigation.turnTo(0);
 
             lightLocalizer.type = 0; // First localization
             lightLocalizer.runLightLocalization();
 
-            if(Main.zo_g_x < 6) { 
+            if(Main.zo_g_x > 6) { // TODO Change this
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
             } else { // zipline too far to travel to it directly
                 navigation.travelTo(6, 2);
@@ -54,7 +56,7 @@ public class IntegrationTest {
             navigation.travelTo(Main.sv_ll_x + 0.5, Main.sv_ll_y - 0.5);
             
             // Go home!
-            navigation.travelTo(11.5, 0.5);
+            navigation.travelTo(11.5, 0.5); 
 
         } else { // RED
             UltrasonicLocalizer.doLocalization();
