@@ -23,7 +23,7 @@ public class IntegrationTest {
         if (teamColor.equals(TeamColor.GREEN)) {
             new UltrasonicLocalizer(LocalizationType.FALLING_EDGE).doLocalization();
 
-            navigation.turnTo(0);
+           
 
             lightLocalizer.type = 0; // First localization
             lightLocalizer.runLightLocalization();
