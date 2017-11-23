@@ -48,6 +48,7 @@ public class UltrasonicLocalizer {
      * Perform falling edge ultrasonic localization, which works by rotating in-place until a wall is seen
      */
     public static void fallingEdge() {
+        Navigation.setAcceleration(125);
         double alpha = 0;
         double beta = 0;
         double deltaTheta = 0;

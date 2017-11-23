@@ -49,7 +49,7 @@ import lejos.robotics.SampleProvider;
 public class Main {
     
     /**The IP address of the computer running the server application*/
-    private static final String SERVER_IP = "192.168.2.27"; // TA or Prof: 192.168.2.3 // I'm 16
+    private static final String SERVER_IP = "192.168.2.31"; // TA or Prof: 192.168.2.3 // I'm 16
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
     /** Enable/disable printing of debug info from the WiFi class*/

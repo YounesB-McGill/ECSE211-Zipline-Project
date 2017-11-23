@@ -84,6 +84,8 @@ public class Navigation {
      */
     public void travelTo(double x, double y, int speed) {
         isTraveling = true;
+        setAcceleration(forwardAcceleration);
+        
         // Convert to cm
         x = x * TILE;
         y = y * TILE;
@@ -283,7 +285,7 @@ public class Navigation {
     public static void travelFor(double distance){
         // Safely set the speed and acceleration
         setSpeed(forwardSpeed);
-        setAcceleration(forwardAcceleration);
+        //setAcceleration(forwardAcceleration);
         if(distance>=0) {
             if(Main.navigationCorrection)
                 rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, 1), false);
@@ -308,6 +310,7 @@ public class Navigation {
     public static void travelForImmediateReturn(double distance){
         // Safely set the speed and acceleration
         setSpeed(forwardSpeed);
+       
         setAcceleration(forwardAcceleration);
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
         rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
@@ -322,7 +325,7 @@ public class Navigation {
     public static void turnRightBy(double angle){
         // Safely set the speed and acceleration
         setSpeed(rotateSpeed);
-        setAcceleration(forwardAcceleration);
+        //setAcceleration(forwardAcceleration);
         angle = convertAngleTo180Scale(angle);
         if(angle == -180) { // base case
             leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, angle), true);
@@ -347,7 +350,7 @@ public class Navigation {
     public static void turnLeftBy(double angle){
         // Safely set the speed and acceleration
         setSpeed(rotateSpeed);
-        setAcceleration(forwardAcceleration);
+        //setAcceleration(forwardAcceleration);
         angle = convertAngleTo180Scale(angle);
         if(angle < 0) {
             turnRightBy(-angle);

@@ -25,7 +25,7 @@ public final class LightLocalizer {
     private static final int ROTATE_SPEED = Main.ROTATE_SPEED;
     private static final int ACCELERATION = 150;
     private static final int FORWARD_DISTANCE = 15;
-    private static final double sensorDis = -11; // -4
+    private static final double sensorDis = -12; // -4
     private static final double TILE = Main.TILE;
     private static final double BOARD_SIZE = Main.BOARD_SIZE;
     
@@ -68,15 +68,12 @@ public final class LightLocalizer {
         if(type==0) {
             doLightLocalizationBegin();
             doLightLocalization(1, 1);
-            stopMotor();
-            navigation.turnTo(0);
-            
+            navigation.turnTo(0);           
             resetAccordingToCorner();
-            stopMotor();
+            
         }
         else if(type==1){
             doLightLocalization(x0, y0); // TODO Change according to starting corner
-            stopMotor();
         }
         else if(type==2){
             driveForward();
@@ -88,7 +85,7 @@ public final class LightLocalizer {
             }
             
             // stop the motors
-            stopMotor();
+            stopMotor(); // Ok
             driveForward(-8,false);
             traverseMotor.stop();
             
@@ -107,11 +104,11 @@ public final class LightLocalizer {
              */
             double unknownX = Main.zc_g_x + 5*(Main.zc_g_x-Main.zo_g_x)/
                     Math.sqrt((Main.zc_g_x-Main.zo_g_x) * (Main.zc_g_x-Main.zo_g_x)
-                            +(Main.zc_g_x-Main.zo_g_x) * (Main.zc_g_x-Main.zo_g_x)); // In TILE, not cm
+                            +(Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y)); // In TILE, not cm
             
             double unknownY = Main.zc_g_y + 5*(Main.zc_g_y-Main.zo_g_y)/
                     Math.sqrt((Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y)
-                            +(Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y)); // In TILE, not cm
+                            +(Main.zc_g_y-Main.zo_g_y) * (Main.zc_g_y-Main.zo_g_y));// In TILE, not cm
             
             /* Terenary operator, similar to a spreadsheet IF statement. Syntax:
              * result = Condition? resultIfTrue : resultIfFalse 
@@ -140,26 +137,9 @@ public final class LightLocalizer {
      * Prepare to do a light localization
      */
     public void doLightLocalizationBegin() {
-        // drive forwards
-        driveForward();
-
-        // when hit a grid line, stop
-        stopAtGridline();
-
-        // drive backward a bit
-        driveBackABit();
-
-        // turn 90 degrees clockwise and drive forwards again
-        setRotateSpeed();
-        leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, 90.0), true);
-        rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, 90.0), false);
-
-        driveForward();
-
-        stopAtGridline();
-
-        // drive backward a small distance
-        driveBackABit();
+      
+        navigation.turnTo(45);
+        driveForward(20,false);
 
     }
 
@@ -173,157 +153,138 @@ public final class LightLocalizer {
      * @param y <i>y</i> coordinate
      */
     public void doLightLocalization(int x, int y) {
-    	 leftMotor.setAcceleration(50);
-         rightMotor.setAcceleration(50);
-            // turn 360 degrees
-            clockwise(360, true);
+        
+        setAcce(2500);
+        // turn 360 degrees
+        clockwise(360, true);
 
-            // record a heading when detect a grid line
-            double[] heading = new double[4];
-            int i = 0;
-            while (leftMotor.isMoving() && i < 4) {
-                if (hitGridLine()) {
-                    Sound.playNote(Sound.PIANO, 3*(180+60*i), 450);
-                    heading[i] = odometer.getTheta() * 180 / Math.PI;
-                    i++;
-                }
+        // record a heading when detect a grid line
+        double[] heading = new double[4];
+        int i = 0;
+        while (leftMotor.isMoving() && i < 4) {
+            if (hitGridLine()) {               
+                heading[i] = odometer.getTheta() * 180 / Math.PI;
+                Sound.playNote(Sound.PIANO, 3 * (180 + 60 * i), 450);
+                i++;
             }
+        }
 
-            //if detect less than 4 grid line, the location is not good
-            //and need to move to a better location
-            if (i < 4) {
-                Sound.beepSequence(); // downwards sequence to indicate failure
-                // move to a better location, and do it again
-                if (i == 0 || i == 1) {
-                    //the robot locate at the center of a block
-                    //so we drive forward until we find a grid line
-                    driveForward();
-                    
-                    while (true) {
-                        if (hitGridLine()) {            
-                            stopMotor();
-                            Sound.beep();
-                            break;
-                        }
+        // if detect less than 4 grid line, the location is not good
+        // and need to move to a better location
+        if (i < 4) {
+            Sound.beepSequence(); // downwards sequence to indicate failure
+            // move to a better location, and do it again
+            if (i == 0 || i == 1) {
+                // the robot locate at the center of a block
+                // so we drive forward until we find a grid line
+                driveForward();
+
+                while (true) {
+                    if (hitGridLine()) {
+                        stopMotor();
+                        Sound.beep();
+                        break;
                     }
-                    driveBackABit();
-                    
-                } else if (i == 2) {
-                    // the robot locates on a line 
-                    //so we follow the line to find a point 
-                    if(type==0){
-                        navigation.turnTo(heading[0]);
-                    }
-                    else {
-                        navigation.turnTo(heading[1]);
-                    }
-                    
-                    stopMotor();
-                    driveForward(12, false);
-                } else if (i == 3){
-                    double[] angle = new double[3];
-                    angle = getAngles(heading, angle);
-                    double MinAng = Math.min(angle[0], Math.min(angle[1], angle[2]));
-                    double directionAngle = findNewDirection(heading, angle, MinAng);
-                    //here turnTo method go to the reverse direction, so I just drive backwards
-                    navigation.turnTo(directionAngle);
-                    //stopMotor();
-                    driveForward(-5, false);
                 }
-                stopMotor();
-                //recursively call doLightLocalization
-                doLightLocalization(x, y);
-                return;
-            }
+                driveBackABit();
 
-            // find the 4 angles between 4 headings and find the Minimum value between them
-            double[] angle = new double[4];
-            angle = getAngles(heading, angle);
-            double MinAng = Math.min(angle[0], Math.min(angle[1], Math.min(angle[2], angle[3])));
-
-            
-            //if there is an angle too small (less than 40 degrees), 
-            //then the location of robot is not good.
-            if (MinAng < 40) {
-                Sound.beepSequence();
-                Sound.beepSequence();
-                // move to a better location, and do it again
-                // here we move to the direction of the smallest angle
+            } else if (i == 2) {
+                // the robot locates on a line
+                // so we follow the line to find a point             
+                navigation.turnTo(heading[0]);
+                
+                driveForward(-15, false);
+            } else if (i == 3) {
+                double[] angle = new double[3];
+                angle = getAngles(heading, angle);
+                double MinAng = Math.min(angle[0], Math.min(angle[1], angle[2]));
                 double directionAngle = findNewDirection(heading, angle, MinAng);
-                //here turnTo method go to the reverse direction, so I just drive backwards
+                // here turnTo method go to the reverse direction, so I just
+                // drive backwards
                 navigation.turnTo(directionAngle);
-                //stopMotor();
+
                 driveForward(-10, false);
-                //stopMotor();
-                //recursively call doLightLocalization
-                doLightLocalization(x, y);
-                return;
             }
+            // recursively call doLightLocalization when not all 4 points detected
+            doLightLocalization(x, y);
+            return;
+        }
 
-            
-            // Now that the location is good, do the actual light localization
-            // first calculate according to headings
-            double theta1 = getAngleBetweenHeadings(heading[1], heading[3]);
-            double direction1 = calculateAverageAngle(heading[1], heading[3]);
-            double distance1 = sensorDis * Math.cos((Math.PI * theta1 / 180) / 2);
+        // find the 4 angles between 4 headings and find the Minimum value
+        // between them
+        double[] angle = new double[4];
+        angle = getAngles(heading, angle);
+        double MinAng = Math.min(angle[0], Math.min(angle[1], Math.min(angle[2], angle[3])));
 
-            double theta2 = getAngleBetweenHeadings(heading[0], heading[2]);
-            double direction2 = calculateAverageAngle(heading[0], heading[2]);
-            double distance2 = sensorDis * Math.cos((Math.PI * theta2 / 180) / 2);
+        // if there is an angle too small (less than 40 degrees),
+        // then the location of robot is not good.
+        if (MinAng < 40) {
+            Sound.beepSequence();
+            Sound.beepSequence();
+            // move to a better location, and do it again
+            // here we move to the direction of the smallest angle
+            double directionAngle = findNewDirection(heading, angle, MinAng);
+            // here turnTo method go to the reverse direction, so I just drive
+            // backwards
+            navigation.turnTo(directionAngle);
+            driveForward(-10, false);
+            // recursively call doLightLocalization
+            doLightLocalization(x, y);
+            return;
+        }
 
-            
-            // do the localization
-            navigation.turnTo(direction1);
-            //stopMotor();
-            driveForward(distance1, false);
-           //stopMotor();
-            navigation.turnTo(direction2);
-            //stopMotor();
-            driveForward(distance2, false);
+        // Now that the location is good, do the actual light localization
+        // first calculate according to headings
+        double theta1 = getAngleBetweenHeadings(heading[1], heading[3]);
+        double direction1 = calculateAverageAngle(heading[1], heading[3]);
+        double distance1 = sensorDis * Math.cos((Math.PI * theta1 / 180) / 2);
 
-            // stop motor
-            //stopMotor();
-            Sound.beepSequenceUp();
+        double theta2 = getAngleBetweenHeadings(heading[0], heading[2]);
+        double direction2 = calculateAverageAngle(heading[0], heading[2]);
+        double distance2 = sensorDis * Math.cos((Math.PI * theta2 / 180) / 2);
 
+        if (Main.printToConsole)
+            System.out.println("dir1: " + direction1 + ", dir2: " + direction2);
+
+        // do the localization
+        navigation.turnTo(direction1);
+        driveForward(distance1, false);
+        navigation.turnTo(direction2);
+        driveForward(distance2, false);
+        Sound.beepSequenceUp();
+
+        // find the actual location x,y
+        double currentX = findClosestCoordinate(odometer.getX(), x * TILE);
+        double currentY = findClosestCoordinate(odometer.getY(), y * TILE);
+        // set odometer
+        odometer.setX(currentX);
+        odometer.setY(currentY);
+ 
+        double startTime = System.currentTimeMillis();
         
-            //find the actual location x,y
-            double currentX=findClosestCoordinate(odometer.getX(),x*TILE);
-            double currentY=findClosestCoordinate(odometer.getY(),y*TILE);      
-            // set odometer
-            odometer.setX(currentX);
-            odometer.setY(currentY);
-            
-
-            // turn 360 degrees
-            clockwise(360, true);
-
-            setAcce(2500);
-            //when a grid line is detected, 
-            //stop and set Theta to the closest direction between 4 directions
-            while (leftMotor.isMoving()&&rightMotor.isMoving()) {
-                if (hitGridLine()) {                               
-                   
-                    stopMotor();
-                    break;
-                }
-            }       
-            Sound.playNote(Sound.PIANO, 600, 300);
-            //correction by offset
-            counterclockwise(10,false);
-           // stopMotor();
-            
-            if (!hitGridLine()) {           
-                counterclockwise(5,false);
+        //setAcce(2500);
+        // turn ccw
+        clockwise();
+     
+        // when a grid line is detected,
+        // stop and set Theta to the closest direction between 4 directions
+        while (leftMotor.isMoving() && rightMotor.isMoving() && (System.currentTimeMillis() < startTime + 10000)) {
+            if (hitGridLine()) {
                 stopMotor();
+                break;
             }
-            
-            //calibration
-            double currentTheta = odometer.getTheta() * 180 / Math.PI;
-            int calibration = setToClosestTheta(currentTheta);
-            odometer.setTheta(calibration * Math.PI / 180);
-            stopMotor();
-            Sound.playNote(Sound.PIANO, 800, 300);
-        
+        }
+        Sound.playNote(Sound.PIANO, 600, 300);
+        // correction by offset
+        counterclockwise(7, false);
+
+
+        // calibration
+        double currentTheta = odometer.getTheta() * 180 / Math.PI;
+        int calibration = setToClosestTheta(currentTheta);
+        odometer.setTheta(calibration * Math.PI / 180);
+        Sound.playNote(Sound.PIANO, 800, 300);
+
     } // end doLightLocalization
 
     
@@ -500,13 +461,13 @@ public final class LightLocalizer {
      * should be executed when this rotation hasn't ended
      */
     private void driveForward(double distance, boolean condition) {
+        Navigation.setAcceleration(500);
         setForwardSpeed();
         leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance*0.6), true);
-        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance*0.6), true);
-        if (!condition) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }
+        rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance*0.6), condition);
+       
+        Navigation.setAcceleration(2500);
+        try{Thread.sleep(200);}catch(Exception e){}
     }
 
     /**
@@ -519,11 +480,8 @@ public final class LightLocalizer {
     private void clockwise(double theta, boolean condition) {
         setRotateSpeed();
         leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-        rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-        if (!condition) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }
+        rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), condition);
+        try{Thread.sleep(200);}catch(Exception e){}
     }
 
     /**
@@ -534,13 +492,11 @@ public final class LightLocalizer {
      * should be executed when this rotation hasn't ended.
      */
     private void counterclockwise(double theta, boolean condition) {
+     
         setRotateSpeed();
         leftMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-        rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
-        if (!condition) {
-            leftMotor.waitComplete();
-            rightMotor.waitComplete();
-        }
+        rightMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), condition);
+        try{Thread.sleep(200);}catch(Exception e){}
     }
 
     /**
@@ -576,9 +532,9 @@ public final class LightLocalizer {
      */
     private void stopMotor() {
         leftMotor.stop(true);
-        rightMotor.stop();
-       
-        
+        rightMotor.stop(false);
+
+        try{Thread.sleep(200);}catch(Exception e){}
     }
 
     /**
@@ -629,9 +585,8 @@ public final class LightLocalizer {
     private void driveBackABit() {
         setForwardSpeed();
         leftMotor.rotate(-convertDistance(WHEEL_RADIUS, FORWARD_DISTANCE), true);
-        rightMotor.rotate(-convertDistance(WHEEL_RADIUS, FORWARD_DISTANCE), true);
-        leftMotor.waitComplete();
-        rightMotor.waitComplete();
+        rightMotor.rotate(-convertDistance(WHEEL_RADIUS, FORWARD_DISTANCE), false);
+        try{Thread.sleep(200);}catch(Exception e){}
     }
 
     /**
@@ -658,20 +613,13 @@ public final class LightLocalizer {
     }
     
     private static void setZiplineCoordinates() {
-        if(Main.teamColor.equals(TeamColor.GREEN)) {
             x0 = Main.zo_g_x;
             y0 = Main.zo_g_y;
             xc = Main.zc_g_x;
             yc = Main.zc_g_y;
-        } else { // RED
-            x0 = Main.zo_r_x;
-            y0 = Main.zo_r_y;
-            xc = Main.zc_r_x;
-            yc = Main.zc_r_y;
-        }
     }
     
-    private static void setStartCorner() {
+    private static void setStartCorner() { // TODO Wrong assumption
         if(Main.teamColor.equals(TeamColor.GREEN)) {
             startCorner = 1;
         } else { // RED
