@@ -78,8 +78,8 @@ public class UltrasonicLocalizer {
         rightMotor.stop(false);
         beta = odometer.getThetaInDegrees();
         Sound.beep();
-        leftMotor.stop(true);
-        rightMotor.stop(true);
+//      leftMotor.stop(true); //TODO
+//      rightMotor.stop(true);
 
         deltaTheta = headingToBe(alpha, beta);
         Sound.beepSequence();

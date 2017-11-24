@@ -49,7 +49,7 @@ import lejos.robotics.SampleProvider;
 public class Main {
     
     /**The IP address of the computer running the server application*/
-    private static final String SERVER_IP = "192.168.2.31"; // TA or Prof: 192.168.2.3 // I'm 16
+    private static final String SERVER_IP = "192.168.2.3"; // TA or Prof: 192.168.2.3 // I'm 16
     /**Contestants' Team number*/
     private static final int TEAM_NUMBER = 10;
     /** Enable/disable printing of debug info from the WiFi class*/
@@ -63,7 +63,7 @@ public class Main {
     public static final double TRACK = 14.68; // was 14.68, 14.80, 15.0, 15.2.
     /**The length of one competition floor tile, 30.48 cm.*/public static final double TILE = 30.48;
     /**The dimension of the playing field, in Tile lengths. 8 in beta demo and 12 in final competition*/
-    public static final double BOARD_SIZE = 8;
+    public static final double BOARD_SIZE = 12;
     
     /**The speed used by the robot to travel forward.*/public static final int FWD_SPEED = 300;
     /**The acceleration used by the robot to travel forward.*/public static final int FWD_ACC = 175;
@@ -121,7 +121,7 @@ public class Main {
     /**<code>int</code> corresponding to the EV3 button being pressed.*/
     public static int buttonChoice;
     /**Controls whether to print odometry and battery information to Console (and on the robot screen)*/
-    public static boolean printToConsole = true;
+    public static boolean printToConsole = false;//true;
     
     /**
      * The Motors used in the application, namely 
@@ -200,7 +200,7 @@ public class Main {
         
         setTeamColor();
         
-        System.out.println("Green team:" + greenTeam);
+        //System.out.println("Green team:" + greenTeam);
         //startCorner = Display.getStartCornerUI();
         
         //TestOdometer.testOdometer();
@@ -232,10 +232,13 @@ public class Main {
      * Sets the team color of the robot based on the information obtained from Wi-Fi
      */
     public static void setTeamColor() {
-    	if(greenTeam == TEAM_NUMBER)
+    	if(greenTeam == TEAM_NUMBER) {
     		teamColor = TeamColor.GREEN;
-    	else // RED
+    	    Button.LEDPattern(4); // flashing green
+    	} else { // RED
     		teamColor = TeamColor.RED;
+    		Button.LEDPattern(5); // flashing red
+    	}
     }
     
     /**

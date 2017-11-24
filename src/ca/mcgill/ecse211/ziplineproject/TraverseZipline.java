@@ -22,7 +22,7 @@ public class TraverseZipline {
     private static final int TRAVERSE_SPEED = Main.TRAVERSE_SPEED;
     private static final int SLOWDOWN_SPEED = 50;
     /**The length of the Zipline*/
-    private static final double ZIPLINE_DISTANCE = 4.3*Main.TILE*1.9; // 4 Tiles and a bit more
+    private static final double ZIPLINE_DISTANCE = 4.3*Main.TILE*2.1; // 4 Tiles and a bit more
 
     public static void traverseZipline() {
         // left and right motor still need to run

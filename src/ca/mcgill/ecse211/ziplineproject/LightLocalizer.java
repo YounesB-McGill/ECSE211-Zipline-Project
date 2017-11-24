@@ -144,7 +144,7 @@ public final class LightLocalizer {
     }
 
     
-/**
+    /**
      * LightLocalization method, which is suitables for localizing at any point 
      * on the Panel. The arguments <i>x</i> and <i>y</i> are the approximate coordinates 
      * of the robot's location.
