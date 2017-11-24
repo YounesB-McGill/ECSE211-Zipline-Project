@@ -19,19 +19,29 @@ public class IntegrationTest {
      */
     @SuppressWarnings("static-access") // Need to set global variable
 	public static void integrationTest() {
+        
+        double yPoint;
+        if(Main.green_ur_x <= 6) yPoint = 2;
+        else yPoint = 10;
+        
 
         if (teamColor.equals(TeamColor.GREEN)) {
-            new UltrasonicLocalizer(LocalizationType.FALLING_EDGE).doLocalization();
-
-           
+            UltrasonicLocalizer ultrasonicLocalizer = new UltrasonicLocalizer(LocalizationType.FALLING_EDGE);
+            ultrasonicLocalizer.doLocalization(); // prevent NullPointerExceptions
 
             lightLocalizer.type = 0; // First localization
             lightLocalizer.runLightLocalization();
+            
+            int xStart;
+            if(Main.greenCorner==0) xStart = 0;
+            else if(Main.greenCorner==1) xStart = 12;
+            else if(Main.greenCorner==2) xStart = 12;
+            else xStart = 0;
 
-            if(Main.zo_g_x > 6) { // TODO Change this
+            if(Math.abs(Main.zo_g_x-xStart) < 6) { // TODO Change this
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
             } else { // zipline too far to travel to it directly
-                navigation.travelTo(6, 2);
+                navigation.travelTo(6, yPoint);
                 lightLocalizer.type = 1; // regular localization
                 lightLocalizer.runLightLocalization();
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
@@ -50,16 +60,22 @@ public class IntegrationTest {
             // TODO Look for flag
             
             // Shallow crossing
-            navigation.travelTo(Main.sh_ll_x, Main.sh_ll_y + 0.5); // Don't drown in river!
+            navigation.travelTo(Main.sh_ll_x, (Main.sh_ll_y + Main.sh_ur_y)/2); // Don't drown in river!
             FlagCapture.captureFlag();
-            navigation.travelTo(Main.sh_ur_x - 0.5, Main.sh_ur_y - 0.5);
-            navigation.travelTo(Main.sv_ll_x + 0.5, Main.sv_ll_y - 0.5);
+            navigation.travelTo((Main.sv_ll_x + Main.sv_ur_x)/2, (Main.sh_ll_y + Main.sh_ur_y)/2);
+            navigation.travelTo((Main.sv_ll_x + Main.sv_ur_x)/2, Main.sv_ll_y);
             
             // Go home!
-            navigation.travelTo(11.5, 0.5); 
+            double xEnd, yEnd;
+            if(Main.greenCorner==0) {xEnd = 0.5; yEnd = 0.5;}
+            else if(Main.greenCorner==1) {xEnd = 11.5; yEnd = 0.5;}
+            else if(Main.greenCorner==2) {xEnd = 11.5; yEnd = 11.5;}
+            else {xEnd = 0.5; yEnd = 11.5;}
+            navigation.travelTo(xEnd, yEnd); 
 
-        } else { // RED
-            UltrasonicLocalizer.doLocalization();
+        } else if (teamColor.equals(TeamColor.RED)){ // RED
+            UltrasonicLocalizer ultrasonicLocalizer = new UltrasonicLocalizer(LocalizationType.FALLING_EDGE);
+            ultrasonicLocalizer.doLocalization(); // prevent NullPointerExceptions
 
             navigation.turnTo(0);
 
@@ -67,16 +83,17 @@ public class IntegrationTest {
             lightLocalizer.runLightLocalization();
             
             // Shallow crossing
-            navigation.travelTo(Main.sh_ll_x, Main.sh_ll_y + 0.5); // Don't drown in river!
-            navigation.travelTo(Main.sh_ur_x - 0.5, Main.sh_ur_y - 0.5);
-            navigation.travelTo(Main.sv_ll_x + 0.5, Main.sv_ll_y - 0.5);
+            navigation.travelTo(Main.sh_ll_x, (Main.sh_ll_y + Main.sh_ur_y)/2); // Don't drown in river!
+            FlagCapture.captureFlag();
+            navigation.travelTo((Main.sv_ll_x + Main.sv_ur_x)/2, (Main.sh_ll_y + Main.sh_ur_y)/2);
+            navigation.travelTo((Main.sv_ll_x + Main.sv_ur_x)/2, Main.sv_ll_y);
             
             // TODO Look for flag
             
             if(Math.abs(Main.sv_ll_x - Main.zo_g_x) < 6) { 
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
             } else { // zipline too far to travel to it directly
-                navigation.travelTo(6, 2);
+                navigation.travelTo(6, yPoint);
                 lightLocalizer.type = 1; // regular localization
                 lightLocalizer.runLightLocalization();
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
@@ -95,7 +112,12 @@ public class IntegrationTest {
             lightLocalizer.runLightLocalization();
             
             // Go home!
-            navigation.travelTo(0.5, 11.5);
+            double xEnd, yEnd;
+            if(Main.redCorner==0) {xEnd = 0.5; yEnd = 0.5;}
+            else if(Main.redCorner==1) {xEnd = 11.5; yEnd = 0.5;}
+            else if(Main.redCorner==2) {xEnd = 11.5; yEnd = 11.5;}
+            else {xEnd = 0.5; yEnd = 11.5;}
+            navigation.travelTo(xEnd, yEnd);
 
         } // end else // RED
 
