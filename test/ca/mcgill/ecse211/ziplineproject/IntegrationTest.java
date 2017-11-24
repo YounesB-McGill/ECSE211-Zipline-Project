@@ -32,16 +32,25 @@ public class IntegrationTest {
             lightLocalizer.type = 0; // First localization
             lightLocalizer.runLightLocalization();
             
-            int xStart;
+            double xStart;
             if(Main.greenCorner==0) xStart = 0;
             else if(Main.greenCorner==1) xStart = 12;
             else if(Main.greenCorner==2) xStart = 12;
             else xStart = 0;
+            
+            double yStart;
+            if(Main.greenCorner==0) yStart = 0;
+            else if(Main.greenCorner==1) yStart = 0;
+            else if(Main.greenCorner==2) yStart = 12;
+            else yStart = 12;
+            
+            double distToZipline = Math.sqrt((xStart-Main.zo_g_x)*(xStart-Main.zo_g_x)
+            		+(yStart-Main.zo_g_y)*(yStart-Main.zo_g_y));
 
-            if(Math.abs(Main.zo_g_x-xStart) < 6) { // TODO Change this
+            if(distToZipline < 6) { // TODO Change this
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
             } else { // zipline too far to travel to it directly
-                navigation.travelTo(6, yPoint);
+                navigation.travelTo((xStart+Main.zo_g_x)/2d, (yStart+Main.zo_g_y)/2d);
                 lightLocalizer.type = 1; // regular localization
                 lightLocalizer.runLightLocalization();
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
@@ -90,10 +99,25 @@ public class IntegrationTest {
             
             // TODO Look for flag
             
-            if(Math.abs(Main.sv_ll_x - Main.zo_g_x) < 6) { 
+            double xStart;
+            if(Main.redCorner==0) xStart = 0;
+            else if(Main.redCorner==1) xStart = 12;
+            else if(Main.redCorner==2) xStart = 12;
+            else xStart = 0;
+            
+            double yStart;
+            if(Main.redCorner==0) yStart = 0;
+            else if(Main.redCorner==1) yStart = 0;
+            else if(Main.redCorner==2) yStart = 12;
+            else yStart = 12;
+            
+            double distToZipline = Math.sqrt((xStart-Main.zo_g_x)*(xStart-Main.zo_g_x)
+            		+(yStart-Main.zo_g_y)*(yStart-Main.zo_g_y));
+            
+            if(distToZipline < 6) { 
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
             } else { // zipline too far to travel to it directly
-                navigation.travelTo(6, yPoint);
+                navigation.travelTo((Main.sv_ll_x+Main.zo_g_x)/2d, (Main.sv_ll_y+Main.zo_g_y)/2d);
                 lightLocalizer.type = 1; // regular localization
                 lightLocalizer.runLightLocalization();
                 navigation.travelTo(Main.zo_g_x, Main.zo_g_y);
