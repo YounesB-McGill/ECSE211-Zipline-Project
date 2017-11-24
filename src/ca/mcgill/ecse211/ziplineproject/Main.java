@@ -191,14 +191,20 @@ public class Main {
     public static void main(String[] args) {
         // Indicate program has loaded
         Sound.beepSequenceUp();
-        // Get Wi-Fi parameters from the server
+        // Get Wi-Fi paramers from the server
+        
         getWiFiParameters();
+     // while(!(teamColor.equals(TeamColor.GREEN)||teamColor.equals(TeamColor.RED)))
+        	//; // wait for Wi-Fi parameters
         
         // Start odometer and display runnables here
         odometer.start();
         display.start();
         
         setTeamColor();
+        
+       // while(!(teamColor.equals(TeamColor.GREEN)||teamColor.equals(TeamColor.RED)))
+        //	; // wait for Wi-Fi parameters
         
         //System.out.println("Green team:" + greenTeam);
         //startCorner = Display.getStartCornerUI();
@@ -235,7 +241,7 @@ public class Main {
     	if(greenTeam == TEAM_NUMBER) {
     		teamColor = TeamColor.GREEN;
     	    Button.LEDPattern(4); // flashing green
-    	} else { // RED
+    	} else if(redTeam == TEAM_NUMBER) { // RED
     		teamColor = TeamColor.RED;
     		Button.LEDPattern(5); // flashing red
     	}
